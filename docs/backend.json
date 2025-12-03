@@ -24,7 +24,7 @@
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": ["email", "google.com"]
   },
   "firestore": {
     "/users/{userId}": {

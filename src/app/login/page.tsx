@@ -18,6 +18,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  User,
 } from 'firebase/auth';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,13 +31,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleLoginSuccess = (user: User) => {
+    toast({ title: 'Success', description: 'Logged in successfully!' });
+    if (user.email === 'ibrahimzdilshad@gmail.com') {
+      router.push('/admin');
+    } else {
+      router.push('/volunteer');
+    }
+  };
+
   const handleEmailLogin = async () => {
     if (!auth) return;
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: 'Success', description: 'Logged in successfully!' });
-      // Redirect to a protected route
-      router.push('/admin');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      handleLoginSuccess(userCredential.user);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -50,9 +58,8 @@ export default function LoginPage() {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      toast({ title: 'Success', description: 'Logged in with Google successfully!' });
-      router.push('/admin');
+      const userCredential = await signInWithPopup(auth, provider);
+      handleLoginSuccess(userCredential.user);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -98,18 +105,6 @@ export default function LoginPage() {
                 <Button variant="outline" onClick={handleGoogleLogin}>
                   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 177 56.5L357 187.6c-27.1-25.5-62.2-41-100.2-41-83.3 0-151.8 68.5-151.8 151.8s68.5 151.8 151.8 151.8c90.1 0 138.8-63.8 143.4-93.5H248v-85.3h236.1c2.3 12.7 3.9 26.1 3.9 40.2z"></path></svg>
                   Se connecter avec Google
-                </Button>
-            </div>
-             <div className="flex flex-col space-y-2 pt-2">
-                <Button asChild>
-                    <Link href="/admin">
-                        <Shield className="mr-2 h-4 w-4"/> Se connecter en tant qu'administrateur
-                    </Link>
-                </Button>
-                <Button asChild variant="secondary">
-                    <Link href="/volunteer">
-                        <Users className="mr-2 h-4 w-4"/> Se connecter en tant que bénévole
-                    </Link>
                 </Button>
             </div>
           </CardContent>
