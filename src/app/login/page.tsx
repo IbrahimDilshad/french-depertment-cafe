@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -11,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, ShieldCheck } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import Logo from '@/components/logo';
 import { useAuth, useFirestore } from '@/firebase';
 import {
@@ -24,7 +25,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/lib/types';
-import { Switch } from '@/components/ui/switch';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -33,7 +33,6 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   
   const handleAuthSuccess = async (user: User) => {
     if (!firestore) return;
@@ -51,35 +50,54 @@ export default function LoginPage() {
         router.push('/volunteer');
       }
     } else {
-      // This is a new user, create their profile with a default role
+      // This is a new user, create their profile.
+      // The only user who can self-register as admin is the primary one.
+      const isAdmin = user.email === 'ibrahimzdilshad@gmail.com';
+      const role = isAdmin ? 'admin' : 'volunteer';
+
        const newUserProfile: Omit<UserProfile, 'id'> = {
         displayName: user.email!.split('@')[0],
         email: user.email!,
-        role: 'volunteer', // Default role
+        role: role,
       };
 
       await setDoc(doc(firestore, "users", user.uid), newUserProfile);
       toast({ title: 'Welcome!', description: `Account created for ${user.email}` });
-      router.push('/volunteer'); // Redirect new users to volunteer page
+      
+      if (role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/volunteer'); // Should not happen with public sign-up removed, but as a fallback.
+      }
     }
   };
 
-  const handleAuth = async () => {
+  const handleLogin = async () => {
     if (!auth) return;
     try {
-      if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await handleAuthSuccess(userCredential.user);
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        await handleAuthSuccess(userCredential.user);
-      }
+      // Try to sign in first.
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await handleAuthSuccess(userCredential.user);
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: isSignUp ? 'Sign Up Failed' : 'Login Failed',
-        description: error.message,
-      });
+      // If sign-in fails because the user doesn't exist, and it's the admin email, create the account.
+      if (error.code === 'auth/user-not-found' && email === 'ibrahimzdilshad@gmail.com') {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await handleAuthSuccess(userCredential.user);
+        } catch (creationError: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Admin Creation Failed',
+            description: creationError.message,
+          });
+        }
+      } else {
+         toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: "Invalid email or password.",
+        });
+      }
     }
   };
 
@@ -97,9 +115,9 @@ export default function LoginPage() {
         </div>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>{isSignUp ? 'Créer un compte' : 'Connexion'}</CardTitle>
+            <CardTitle>Connexion</CardTitle>
             <CardDescription>
-              {isSignUp ? "Créez un nouveau compte pour commencer." : "Entrez vos identifiants ci-dessous."}
+              Entrez vos identifiants ci-dessous.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -113,14 +131,9 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button onClick={handleAuth} className="w-full">
-              <Mail className="mr-2 h-4 w-4"/> {isSignUp ? "S'inscrire avec E-mail" : "Se connecter avec E-mail"}
+            <Button onClick={handleLogin} className="w-full">
+              <Mail className="mr-2 h-4 w-4"/> Se connecter avec E-mail
             </Button>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="mode-switch">Connexion</Label>
-              <Switch id="mode-switch" checked={isSignUp} onCheckedChange={setIsSignUp} />
-              <Label htmlFor="mode-switch">S'inscrire</Label>
-            </div>
           </CardFooter>
         </Card>
       </div>
