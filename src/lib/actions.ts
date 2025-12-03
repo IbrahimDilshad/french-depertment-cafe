@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -36,7 +37,7 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     revalidatePath("/pre-order");
     revalidatePath("/admin/pre-orders");
 
-    return { message: "Votre pré-commande a été soumise avec succès!" };
+    return { message: "Your pre-order has been submitted successfully!" };
   } catch(e) {
     return { errors: { _form: ["Failed to submit pre-order."] } };
   }
@@ -54,14 +55,14 @@ export async function generateAnnouncement(prevState: any, formData: FormData) {
   // In a real app, this would call the Genkit AI flow
   await new Promise(resolve => setTimeout(resolve, 1500));
 
-  const generatedText = `Chers étudiants et personnel,
+  const generatedText = `Dear students and staff,
 
-Nous sommes ravis de vous annoncer une nouveauté à "Le French Café" concernant **${topic}**. Venez découvrir nos nouvelles offres et profitez d'un moment de détente.
+We are excited to announce a new update at "Le French Café" regarding **${topic}**. Come check out our new offerings and enjoy a relaxing moment.
 
-Merci de votre soutien continu!
+Thank you for your continued support!
 
-Cordialement,
-L'équipe du French Café`;
+Best,
+The Le French Café Team`;
 
   return {
     announcement: generatedText,

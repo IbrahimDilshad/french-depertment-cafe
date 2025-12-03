@@ -114,32 +114,32 @@ export default function LoginPage() {
         <div className="text-center">
             <Logo className="justify-center mb-4"/>
           <h1 className="text-3xl font-headline text-primary">
-            Espace Membre
+            Member Area
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Connectez-vous pour accéder à votre tableau de bord.
+            Log in to access your dashboard.
           </p>
         </div>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Connexion</CardTitle>
+            <CardTitle>Login</CardTitle>
             <CardDescription>
-              Entrez vos identifiants ci-dessous.
+              Enter your credentials below.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse e-mail</Label>
-              <Input id="email" type="email" placeholder="nom@exemple.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="email">Email Address</Label>
+              <Input id="email" type="email" placeholder="name@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
             <Button onClick={handleLogin} className="w-full">
-              <Mail className="mr-2 h-4 w-4"/> Se connecter avec E-mail
+              <Mail className="mr-2 h-4 w-4"/> Login with Email
             </Button>
           </CardFooter>
         </Card>

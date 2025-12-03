@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -8,7 +9,7 @@ import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Le French Café',
-  description: 'Bienvenue au café de notre école!',
+  description: 'Welcome to our school\'s café!',
 };
 
 export default function RootLayout({

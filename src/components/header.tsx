@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import Logo from './logo';
 
 const routes = [
   { href: '/', label: 'Menu' },
-  { href: '/pre-order', label: 'Pré-commander' },
+  { href: '/pre-order', label: 'Pre-order' },
 ];
 
 export default function Header() {
@@ -34,7 +35,7 @@ export default function Header() {
           <div className="hidden md:flex items-center ml-6">
             <Button asChild>
               <Link href="/login">
-                <User className="mr-2 h-4 w-4" /> Espace Membre
+                <User className="mr-2 h-4 w-4" /> Member Area
               </Link>
             </Button>
           </div>
@@ -66,7 +67,7 @@ export default function Header() {
                   <div className="mt-auto px-4">
                     <Button asChild className="w-full">
                       <Link href="/login">
-                        <User className="mr-2 h-4 w-4" /> Espace Membre
+                        <User className="mr-2 h-4 w-4" /> Member Area
                       </Link>
                     </Button>
                   </div>

@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import {
   Card,
@@ -20,10 +21,10 @@ export default function Home() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
-          Notre Menu
+          Our Menu
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-          Découvrez nos délicieuses boissons et collations, préparées avec amour par nos bénévoles.
+          Discover our delicious drinks and snacks, prepared with love by our volunteers.
         </p>
       </div>
 
@@ -44,7 +45,7 @@ export default function Home() {
                   />
                   {item.availability === 'Sold Out' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="text-white text-2xl font-bold">Épuisé</span>
+                      <span className="text-white text-2xl font-bold">Sold Out</span>
                     </div>
                   )}
                 </div>
@@ -53,7 +54,7 @@ export default function Home() {
                 <div className="flex justify-between items-start mb-2">
                   <CardTitle className="font-headline text-xl">{item.name}</CardTitle>
                   <Badge variant={item.availability === 'In Stock' ? 'secondary' : 'destructive'} className="shrink-0">
-                    {item.availability === 'In Stock' ? 'Disponible' : 'Épuisé'}
+                    {item.availability}
                   </Badge>
                 </div>
                 <CardDescription>{item.description}</CardDescription>

@@ -40,9 +40,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ShoppingCart, Loader2 } from "lucide-react";
 
 const preOrderSchema = z.object({
-  studentName: z.string().min(2, { message: "Le nom doit comporter au moins 2 caractères." }),
-  studentClass: z.string().min(1, { message: "Veuillez sélectionner une classe." }),
-  items: z.string().min(1, { message: "Veuillez décrire votre commande." }),
+  studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  studentClass: z.string().min(1, { message: "Please select a class." }),
+  items: z.string().min(1, { message: "Please describe your order." }),
 });
 
 function SubmitButton() {
@@ -51,11 +51,11 @@ function SubmitButton() {
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Envoi en cours...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
         </>
       ) : (
         <>
-          <ShoppingCart className="mr-2 h-4 w-4" /> Soumettre la pré-commande
+          <ShoppingCart className="mr-2 h-4 w-4" /> Submit Pre-order
         </>
       )}
     </Button>
@@ -78,7 +78,7 @@ export default function PreOrderPage() {
   useEffect(() => {
     if (state?.message) {
       toast({
-        title: "Succès!",
+        title: "Success!",
         description: state.message,
       });
       form.reset();
@@ -94,19 +94,19 @@ export default function PreOrderPage() {
     <div className="container mx-auto max-w-3xl py-12 px-4">
       <div className="text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
-          Pré-commander
+          Pre-order
         </h1>
         <p className="text-lg text-muted-foreground">
-          Commandez à l'avance pour un ramassage le lendemain.
+          Order ahead for next-day pickup.
         </p>
       </div>
 
       <Card className="shadow-lg">
         <form action={formAction}>
           <CardHeader>
-            <CardTitle>Votre Commande</CardTitle>
+            <CardTitle>Your Order</CardTitle>
             <CardDescription>
-              Remplissez les détails ci-dessous. Les commandes sont pour un ramassage le lendemain matin.
+              Fill out the details below. Orders are for pickup the next morning.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -116,9 +116,9 @@ export default function PreOrderPage() {
                 name="studentName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom de l'étudiant</FormLabel>
+                    <FormLabel>Student Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jean Dupont" {...field} name="studentName" />
+                      <Input placeholder="John Doe" {...field} name="studentName" />
                     </FormControl>
                     <FormMessage>{state?.errors?.studentName}</FormMessage>
                   </FormItem>
@@ -129,11 +129,11 @@ export default function PreOrderPage() {
                 name="studentClass"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Classe</FormLabel>
+                    <FormLabel>Class</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} name="studentClass">
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez votre classe" />
+                          <SelectValue placeholder="Select your class" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -141,7 +141,7 @@ export default function PreOrderPage() {
                         <SelectItem value="Grade 10">Grade 10</SelectItem>
                         <SelectItem value="Grade 11">Grade 11</SelectItem>
                         <SelectItem value="Grade 12">Grade 12</SelectItem>
-                        <SelectItem value="Staff">Personnel</SelectItem>
+                        <SelectItem value="Staff">Staff</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage>{state?.errors?.studentClass}</FormMessage>
@@ -153,17 +153,17 @@ export default function PreOrderPage() {
                 name="items"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Articles souhaités</FormLabel>
+                    <FormLabel>Desired Items</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Ex: 2 croissants, 1 jus d'orange"
+                        placeholder="e.g., 2 croissants, 1 orange juice"
                         className="resize-none"
                         {...field}
                         name="items"
                       />
                     </FormControl>
                     <FormDescription>
-                     Veuillez lister les articles et les quantités que vous souhaitez commander. Articles disponibles: {availableItems.map(i => i.name).join(', ')}.
+                     Please list the items and quantities you'd like to order. Available items: {availableItems.map(i => i.name).join(', ')}.
                     </FormDescription>
                     <FormMessage>{state?.errors?.items}</FormMessage>
                   </FormItem>
