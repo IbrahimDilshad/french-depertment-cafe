@@ -39,37 +39,39 @@ export default function LoginPage() {
     
     const userDocRef = doc(firestore, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
+    let userRole: UserProfile['role'] = 'volunteer'; // Default role
 
-    if (docSnap.exists()) {
-      const userProfile = docSnap.data() as UserProfile;
-      toast({ title: 'Success', description: `Logged in as ${user.email}` });
-
-      if (userProfile.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/volunteer');
+    // Special handling for the super admin email
+    if (user.email === 'ibrahimzdilshad@gmail.com') {
+      userRole = 'admin';
+      if (!docSnap.exists()) {
+        const adminProfile: Omit<UserProfile, 'id'> = {
+          displayName: user.email!.split('@')[0],
+          email: user.email!,
+          role: 'admin',
+        };
+        await setDoc(userDocRef, adminProfile);
       }
+    } else if (docSnap.exists()) {
+      const userProfile = docSnap.data() as UserProfile;
+      userRole = userProfile.role;
     } else {
-      // This is a new user, create their profile.
-      // The only user who can self-register as admin is the primary one.
-      const isAdmin = user.email === 'ibrahimzdilshad@gmail.com';
-      const role = isAdmin ? 'admin' : 'volunteer';
-
+       // This case is for any other new user, should not happen with sign-up removed,
+       // but as a safeguard, we create a volunteer profile.
        const newUserProfile: Omit<UserProfile, 'id'> = {
         displayName: user.email!.split('@')[0],
         email: user.email!,
-        role: role,
+        role: 'volunteer',
       };
+      await setDoc(userDocRef, newUserProfile);
+    }
+    
+    toast({ title: 'Success', description: `Logged in as ${user.email}` });
 
-      await setDoc(doc(firestore, "users", user.uid), newUserProfile);
-      toast({ title: 'Welcome!', description: `Account created for ${user.email}` });
-      
-      if (role === 'admin') {
-        router.push('/admin');
-      } else {
-        // This case should ideally not be hit with public sign-up removed, but it's a safe fallback.
-        router.push('/volunteer'); 
-      }
+    if (userRole === 'admin') {
+      router.push('/admin');
+    } else {
+      router.push('/volunteer');
     }
   };
 
@@ -92,7 +94,8 @@ export default function LoginPage() {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           await handleAuthSuccess(userCredential.user);
-        } catch (creationError: any) {
+        } catch (creationError: any)
+{
           toast({
             variant: 'destructive',
             title: 'Admin Creation Failed',
