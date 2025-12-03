@@ -16,6 +16,9 @@ import {
   LogOut,
 } from "lucide-react";
 import Logo from "@/components/logo";
+import { useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
@@ -27,6 +30,14 @@ const menuItems = [
 
 export default function VolunteerSidebar() {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <Sidebar>
@@ -55,11 +66,9 @@ export default function VolunteerSidebar() {
       <SidebarFooter>
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Logout">
-                    <Link href="/">
-                        <LogOut />
-                        <span>Logout</span>
-                    </Link>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                  <LogOut />
+                  <span>Logout</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
