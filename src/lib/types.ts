@@ -12,16 +12,13 @@ export interface PreOrder {
   id: string;
   studentName: string;
   studentClass: string;
-  items: {
-    menuItemId: string;
-    quantity: number;
-    name: string;
-  }[];
-  total: number;
-  orderDate: Date;
-  pickupDate: Date;
+  items: string; // Changed from array to simple string for easier input
+  total?: number; // Made optional
+  orderDate?: Date; // Made optional
+  pickupDate: string; // Changed to string to match firestore
   status: 'Pending' | 'Ready' | 'Completed';
 }
+
 
 export interface Sale {
   id: string;
@@ -42,4 +39,12 @@ export interface Volunteer {
 export interface ClassSale {
   class: string;
   sales: number;
+}
+
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  role: 'admin' | 'volunteer';
 }

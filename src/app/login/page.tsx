@@ -13,16 +13,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/logo';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useDoc, useFirestore } from '@/firebase';
 import {
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   User,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { UserProfile } from '@/lib/types';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -31,38 +30,59 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-
+  
   const handleAuthSuccess = (user: User) => {
-    toast({ title: 'Success', description: `Logged in as ${user.email}` });
-    if (user.email === 'ibrahimzdilshad@gmail.com') {
-      router.push('/admin');
-    } else {
-      router.push('/volunteer');
-    }
+    if (!firestore) return;
+    
+    // We need to fetch the user's role from Firestore to decide where to redirect.
+    const userDocRef = doc(firestore, "users", user.uid);
+    getDoc(userDocRef).then(docSnap => {
+      if (docSnap.exists()) {
+        const userProfile = docSnap.data() as UserProfile;
+        toast({ title: 'Success', description: `Logged in as ${user.email}` });
+
+        if (userProfile.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/volunteer');
+        }
+      } else {
+        // This case should ideally not happen if users are created correctly
+        toast({ variant: 'destructive', title: 'Login Failed', description: 'User profile not found.' });
+      }
+    });
   };
 
+  // Helper import from firestore
+  const { getDoc, doc } = require("firebase/firestore");
+
   const handleEmailAuth = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     try {
-      if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        // Create a user profile document in Firestore
-        await setDoc(doc(firestore, "users", user.uid), {
-          displayName: user.email?.split('@')[0] || 'New User',
-          email: user.email,
-          photoURL: user.photoURL
-        });
-        handleAuthSuccess(user);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const userDocRef = doc(firestore, "users", userCredential.user.uid);
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+          const userProfile = docSnap.data() as UserProfile;
+          toast({ title: 'Success', description: `Logged in as ${userCredential.user.email}` });
+  
+          if (userProfile.role === 'admin') {
+            router.push('/admin');
+          } else {
+            router.push('/volunteer');
+          }
       } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        handleAuthSuccess(userCredential.user);
+          // Fallback or error handling
+          toast({ variant: 'destructive', title: 'Login Failed', description: 'User profile not found.' });
+          router.push('/');
       }
+
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: isSignUp ? 'Sign Up Failed' : 'Login Failed',
+        title: 'Login Failed',
         description: error.message,
       });
     }
@@ -74,17 +94,17 @@ export default function LoginPage() {
         <div className="text-center">
             <Logo className="justify-center mb-4"/>
           <h1 className="text-3xl font-headline text-primary">
-            {isSignUp ? 'Créer un compte' : 'Espace Membre'}
+            Espace Membre
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {isSignUp ? 'Créez un nouveau compte pour commencer.' : 'Connectez-vous pour accéder à votre tableau de bord.'}
+            Connectez-vous pour accéder à votre tableau de bord.
           </p>
         </div>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>{isSignUp ? 'Inscription' : 'Connexion'}</CardTitle>
+            <CardTitle>Connexion</CardTitle>
             <CardDescription>
-              {isSignUp ? "Entrez votre e-mail et votre mot de passe pour vous inscrire." : "Entrez vos identifiants ci-dessous."}
+              Entrez vos identifiants ci-dessous.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -98,15 +118,10 @@ export default function LoginPage() {
             </div>
             <div className="flex flex-col space-y-2 pt-2">
                 <Button onClick={handleEmailAuth}>
-                    <Mail className="mr-2 h-4 w-4"/> {isSignUp ? "S'inscrire avec E-mail" : "Se connecter avec E-mail"}
+                    <Mail className="mr-2 h-4 w-4"/> Se connecter avec E-mail
                 </Button>
             </div>
           </CardContent>
-          <CardFooter className="text-center text-sm">
-            <Button variant="link" onClick={() => setIsSignUp(!isSignUp)} className="w-full">
-              {isSignUp ? 'Vous avez déjà un compte? Se connecter' : "Vous n'avez pas de compte? S'inscrire"}
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </div>

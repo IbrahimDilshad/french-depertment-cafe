@@ -20,47 +20,57 @@ import {
   BarChart3,
   Megaphone,
   LogOut,
+  Shield,
 } from "lucide-react";
 import Logo from "@/components/logo";
-import { useAuth } from "@/firebase";
+import { useAuth, useDoc } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/firebase";
+import { UserProfile } from "@/lib/types";
 
-const menuItems = [
+const allMenuItems = [
   {
     href: "/admin",
     label: "Dashboard",
     icon: LayoutDashboard,
+    roles: ["admin"],
   },
   {
     href: "/admin/analytics",
     label: "Analytics",
     icon: BarChart3,
+    roles: ["admin"],
   },
   {
     href: "/admin/menu",
     label: "Menu",
     icon: Coffee,
+    roles: ["admin"],
   },
   {
     href: "/admin/stock",
     label: "Stock",
     icon: Boxes,
+    roles: ["admin", "volunteer"],
   },
   {
     href: "/admin/pre-orders",
     label: "Pre-orders",
     icon: ShoppingCart,
+    roles: ["admin", "volunteer"],
   },
   {
-    href: "/admin/volunteers",
-    label: "Volunteers",
+    href: "/admin/team",
+    label: "Team",
     icon: Users,
+    roles: ["admin"],
   },
   {
     href: "/admin/announcements",
     label: "Announcements",
     icon: Megaphone,
+    roles: ["admin"],
   },
 ];
 
@@ -68,12 +78,18 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const auth = useAuth();
   const router = useRouter();
+  const { user } = useUser();
 
+  const { data: userProfile } = useDoc<UserProfile>(user ? `users/${user.uid}` : 'users/dummy');
+  const userRole = userProfile?.role;
+  
   const handleLogout = async () => {
     if (!auth) return;
     await signOut(auth);
     router.push('/login');
   };
+
+  const menuItems = allMenuItems.filter(item => userRole && item.roles.includes(userRole));
 
   return (
     <Sidebar>

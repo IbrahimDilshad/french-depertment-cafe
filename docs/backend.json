@@ -18,9 +18,55 @@
           "type": "string",
           "format": "uri",
           "description": "URL of the user's profile picture."
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role in the system.",
+          "enum": ["admin", "volunteer"]
         }
       },
-      "required": ["displayName", "email"]
+      "required": ["displayName", "email", "role"]
+    },
+    "menuItem": {
+      "title": "Menu Item",
+      "description": "Represents an item available for sale.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "availability": { "type": "string", "enum": ["In Stock", "Sold Out"] },
+        "stock": { "type": "number" },
+        "imageId": { "type": "string" }
+      },
+      "required": ["name", "price", "availability", "stock"]
+    },
+    "preOrder": {
+        "title": "Pre-Order",
+        "description": "A pre-order made by a student.",
+        "type": "object",
+        "properties": {
+            "studentName": { "type": "string" },
+            "studentClass": { "type": "string" },
+            "items": { "type": "string" },
+            "pickupDate": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["Pending", "Ready", "Completed"] }
+        },
+        "required": ["studentName", "studentClass", "items", "pickupDate", "status"]
+    },
+    "sale": {
+        "title": "Sale",
+        "description": "A record of a sale transaction.",
+        "type": "object",
+        "properties": {
+            "itemId": { "type": "string" },
+            "itemName": { "type": "string" },
+            "quantity": { "type": "number" },
+            "price": { "type": "number" },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "volunteerId": { "type": "string" }
+        },
+        "required": ["itemId", "itemName", "quantity", "price", "timestamp"]
     }
   },
   "auth": {
@@ -31,7 +77,21 @@
       "schema": {
         "$ref": "#/entities/userProfile"
       },
-      "description": "Stores public information about a user."
+      "description": "Stores public information about a user, including their role."
+    },
+    "/menuItems/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/menuItem"
+      },
+      "description": "Stores all items available on the menu."
+    },
+    "/preOrders/{orderId}": {
+        "schema": { "$ref": "#/entities/preOrder" },
+        "description": "Stores all pre-orders."
+    },
+    "/sales/{saleId}": {
+        "schema": { "$ref": "#/entities/sale" },
+        "description": "Stores all sales transactions for analytics."
     }
   }
 }
