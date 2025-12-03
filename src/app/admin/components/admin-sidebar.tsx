@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -74,13 +75,14 @@ const allMenuItems = [
   },
 ];
 
-export default function AdminSidebar() {
+function AdminSidebarContent() {
   const pathname = usePathname();
   const auth = useAuth();
   const router = useRouter();
   const { user } = useUser();
 
-  const { data: userProfile } = useDoc<UserProfile>(user ? `users/${user.uid}` : 'users/dummy');
+  // Conditionally fetch the user profile only when the user object is available.
+  const { data: userProfile } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
   const userRole = userProfile?.role;
   
   const handleLogout = async () => {
@@ -128,3 +130,27 @@ export default function AdminSidebar() {
     </Sidebar>
   );
 }
+
+
+export default function AdminSidebar() {
+  const { user, loading } = useUser();
+
+  // We only render the sidebar content once we have a user,
+  // to prevent hooks from running with null dependencies.
+  if (loading || !user) {
+    // You can return a skeleton loader here if you want
+    return (
+       <Sidebar>
+        <SidebarHeader>
+            <div className="flex items-center justify-between">
+               <Logo className="text-sidebar-foreground" />
+               <SidebarTrigger/>
+            </div>
+        </SidebarHeader>
+       </Sidebar>
+    );
+  }
+
+  return <AdminSidebarContent />;
+}
+

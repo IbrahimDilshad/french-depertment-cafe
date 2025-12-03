@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,17 +11,20 @@ import {
 } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 
-export function useDoc<T>(path: string) {
+export function useDoc<T>(path: string | null) {
   const firestore = useFirestore();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
   useEffect(() => {
-    if (!firestore) {
+    if (!firestore || !path) {
+       setLoading(false);
+       setData(null);
       return;
     }
-
+    
+    setLoading(true);
     const docRef = doc(firestore, path);
 
     const unsubscribe = onSnapshot(
@@ -44,3 +48,4 @@ export function useDoc<T>(path: string) {
 
   return { data, loading, error };
 }
+
