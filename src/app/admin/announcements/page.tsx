@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useFormStatus } from "react-dom";
 import { generateAnnouncement } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,7 @@ function GenerateButton() {
 
 
 export default function AnnouncementsPage() {
-    const [state, formAction] = useFormState(generateAnnouncement, null);
+    const [state, formAction] = useActionState(generateAnnouncement, null);
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
