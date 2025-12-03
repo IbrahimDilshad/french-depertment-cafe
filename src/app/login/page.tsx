@@ -74,7 +74,14 @@ export default function LoginPage() {
   };
 
   const handleLogin = async () => {
-    if (!auth) return;
+    if (!auth || !email || !password) {
+        toast({
+            variant: "destructive",
+            title: "Missing Information",
+            description: "Please enter both email and password.",
+        });
+        return;
+    }
     try {
       // Try to sign in first.
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
