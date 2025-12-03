@@ -67,7 +67,8 @@ export default function LoginPage() {
       if (role === 'admin') {
         router.push('/admin');
       } else {
-        router.push('/volunteer'); // Should not happen with public sign-up removed, but as a fallback.
+        // This case should ideally not be hit with public sign-up removed, but it's a safe fallback.
+        router.push('/volunteer'); 
       }
     }
   };
@@ -91,11 +92,17 @@ export default function LoginPage() {
             description: creationError.message,
           });
         }
-      } else {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
          toast({
           variant: 'destructive',
           title: 'Login Failed',
           description: "Invalid email or password.",
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'An error occurred',
+          description: error.message,
         });
       }
     }
