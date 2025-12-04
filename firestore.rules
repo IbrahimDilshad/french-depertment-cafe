@@ -25,7 +25,7 @@
       }
     },
     "sales": {
-       // Admins and volunteers can create sales.
+       // Any authenticated user can create a sale.
       ".write": "auth != null",
        // Users with access to the dashboard or analytics page can read sales data.
       ".read": "auth != null && (root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/analytics') || root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin'))"

@@ -14,32 +14,39 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Bell } from 'lucide-react';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useDatabase, useUser } from '@/firebase';
 import { MenuItem, Sale } from '@/lib/types';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { ref, push, set, serverTimestamp } from "firebase/database";
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function VolunteerDashboard() {
   const { toast } = useToast();
-  const firestore = useFirestore();
+  const db = useDatabase();
+  const { user } = useUser();
   const { data: menuItems, loading } = useCollection<MenuItem>("menuItems");
   
   const [sales, setSales] = useState<Record<string, number>>({});
 
   const handleSale = async (item: MenuItem) => {
-    if (!firestore) return;
+    if (!db || !user) {
+        toast({ variant: 'destructive', title: "Error", description: `You must be logged in to record a sale.` });
+        return;
+    };
     
     const saleData: Omit<Sale, 'id' | 'timestamp'> & { timestamp: any } = {
         itemId: item.id,
         itemName: item.name,
         quantity: 1,
         price: item.price,
-        volunteerId: 'volunteer-pos', // Placeholder until auth is back
+        volunteerId: user.uid,
         timestamp: serverTimestamp()
     };
 
     try {
-        await addDoc(collection(firestore, 'sales'), saleData);
+        const salesRef = ref(db, 'sales');
+        const newSaleRef = push(salesRef);
+        await set(newSaleRef, saleData);
+
         setSales(prev => ({...prev, [item.id]: (prev[item.id] || 0) + 1}));
         toast({ title: "Sale Recorded", description: `One sale of ${item.name} recorded.` });
     } catch(e: any) {
