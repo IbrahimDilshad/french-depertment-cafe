@@ -10,6 +10,7 @@ import Logo from './logo';
 const routes = [
   { href: '/', label: 'Menu' },
   { href: '/pre-order', label: 'Pre-order' },
+  { href: '/admin', label: 'Management' },
 ];
 
 export default function Header() {

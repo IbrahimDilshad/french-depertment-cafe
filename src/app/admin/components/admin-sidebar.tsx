@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useAuth, useUser, useDoc } from "@/firebase";
 import { UserProfile } from "@/lib/types";
@@ -13,7 +14,9 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarTrigger,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Coffee,
@@ -22,8 +25,10 @@ import {
   Users,
   BarChart3,
   Megaphone,
+  LogOut,
 } from "lucide-react";
 import Logo from "@/components/logo";
+import { signOut } from "firebase/auth";
 
 const allMenuItems = [
   {
@@ -65,38 +70,60 @@ const allMenuItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
   const { user } = useUser();
-  const { data: userProfile, loading } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
-  
-  // Temporarily show all items for initial setup until a user is logged in
-  const menuItems = userProfile ? allMenuItems.filter(item => userProfile.accessiblePages?.includes(item.href)) : allMenuItems;
+  const { data: userProfile, loading } = useDoc<UserProfile>(
+    user ? `users/${user.uid}` : null
+  );
 
+  const menuItems = userProfile?.accessiblePages
+    ? allMenuItems.filter((item) =>
+        userProfile.accessiblePages.includes(item.href)
+      )
+    : [];
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.push("/login");
+  };
 
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center justify-between">
-           <Logo className="text-sidebar-foreground" />
-           <SidebarTrigger/>
+          <Logo className="text-sidebar-foreground" />
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
       <SidebarMenu className="flex-1">
-        {menuItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === item.href}
-              tooltip={item.label}
-            >
-              <Link href={item.href}>
-                <item.icon />
-                <span>{item.label}</span>
-              </Link>
+        {!loading &&
+          menuItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.label}
+              >
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+      </SidebarMenu>
+      <SidebarFooter className="mt-auto">
+        <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
+              <LogOut />
+              <span>Sign Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-      <SidebarFooter>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
