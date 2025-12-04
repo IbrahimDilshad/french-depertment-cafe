@@ -5,6 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getDatabase, ref, push, set, serverTimestamp } from "firebase/database";
 import { initializeServerApp } from "@/firebase/server-init";
+import { headers } from 'next/headers';
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -56,17 +57,20 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     const uploadFormData = new FormData();
     uploadFormData.append('file', paymentScreenshot);
 
-    // We can't use a relative path for fetch on the server, we need the full URL.
-    // In production, NEXT_PUBLIC_URL should be set. For local, we assume localhost.
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:9002';
+    const headersList = headers();
+    const host = headersList.get('host') || 'localhost:9002';
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const baseUrl = `${protocol}://${host}`;
+
     const uploadResponse = await fetch(`${baseUrl}/api/upload`, {
         method: 'POST',
         body: uploadFormData,
     });
     
     if (!uploadResponse.ok) {
-        const errorBody = await uploadResponse.json();
-        throw new Error(errorBody.error || 'Upload to Google Drive failed.');
+        const errorBody = await uploadResponse.json().catch(() => ({ error: 'Upload failed with non-JSON response' }));
+        console.error("Upload API error response:", errorBody);
+        throw new Error(errorBody.error || `Upload to Google Drive failed with status: ${uploadResponse.status}`);
     }
 
     const uploadResult = await uploadResponse.json();
@@ -92,7 +96,7 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
 
     return { message: "Your pre-order has been submitted successfully! You will be notified when it's ready for pickup." };
   } catch(e: any) {
-    console.error(e);
+    console.error("Pre-order submission error:", e);
     return { error: `Failed to submit pre-order. ${e.message}` };
   }
 }
