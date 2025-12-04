@@ -22,6 +22,9 @@ import {
   Megaphone,
 } from "lucide-react";
 import Logo from "@/components/logo";
+import { useUser } from "@/firebase/auth/use-user";
+import { useDoc } from "@/firebase";
+import { UserProfile } from "@/lib/types";
 
 const allMenuItems = [
   {
@@ -70,8 +73,11 @@ const allMenuItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  // Assuming admin role for now to show all items
-  const userRole = "admin"; 
+  const { user } = useUser();
+  // We use the RTDB `useCollection` hook which returns an array, but we expect a single user profile object
+  const { data: userProfile, loading } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
+  
+  const userRole = userProfile?.role || null;
   
   const menuItems = allMenuItems.filter(item => userRole && item.roles.includes(userRole));
 
@@ -84,7 +90,17 @@ export default function AdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarMenu className="flex-1">
-        {menuItems.map((item) => (
+        {loading && Array.from({ length: 5 }).map((_, i) => (
+            <SidebarMenuItem key={i}>
+                <SidebarMenuButton tooltip="Loading..." asChild>
+                    <div className="flex items-center gap-2 p-2">
+                        <div className="h-4 w-4 bg-sidebar-accent rounded-md animate-pulse" />
+                        <div className="h-4 w-24 bg-sidebar-accent rounded-md animate-pulse" />
+                    </div>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        ))}
+        {!loading && menuItems.map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild

@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState } from "react";
-import { useAuth, useCollection, useFirestore } from "@/firebase";
+import { useAuth, useCollection, useDatabase } from "@/firebase";
 import { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +34,10 @@ import {
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { ref, set } from "firebase/database";
 
 export default function TeamManagementPage() {
-  const firestore = useFirestore();
+  const db = useDatabase();
   const auth = useAuth();
   const { toast } = useToast();
   const { data: users, loading } = useCollection<UserProfile>("users");
@@ -44,36 +45,40 @@ export default function TeamManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<"admin" | "volunteer">("volunteer");
 
   const handleAddTeamMember = async () => {
-    if (!auth || !firestore) {
+    if (!auth || !db) {
       toast({ variant: "destructive", title: "Error", description: "Firebase not initialized." });
       return;
     }
-    if (!email || !password) {
-        toast({ variant: "destructive", title: "Error", description: "Email and password are required." });
+    if (!email || !password || !displayName) {
+        toast({ variant: "destructive", title: "Error", description: "All fields are required." });
         return;
     }
 
     try {
-      // This is a simplified flow. In a real app, you'd use a Cloud Function
-      // to create users to avoid needing to handle passwords on the client.
+      // In a real production app, it's safer to handle user creation on a server/Cloud Function
+      // to avoid exposing auth service instances to client-side admins.
+      // This also avoids the need for the admin to re-authenticate if their token is expired.
+      // For this prototype, we'll create the user on the client.
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       const newUserProfile: Omit<UserProfile, 'id'> = {
-        displayName: email.split('@')[0],
+        displayName: displayName,
         email: user.email!,
         role: role,
       };
 
-      await setDoc(doc(firestore, "users", user.uid), newUserProfile);
+      await set(ref(db, `users/${user.uid}`), newUserProfile);
 
       toast({ title: "Success", description: "Team member added successfully." });
       setIsDialogOpen(false);
       setEmail("");
       setPassword("");
+      setDisplayName("");
       setRole("volunteer");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed to add member", description: error.message });
@@ -95,10 +100,14 @@ export default function TeamManagementPage() {
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
               <DialogDescription>
-                Enter the email, a temporary password, and role for the new member.
+                Enter the details for the new team member. They will be invited to set their own password.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="displayName" className="text-right">Display Name</Label>
+                <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="col-span-3" />
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
@@ -149,6 +158,7 @@ export default function TeamManagementPage() {
                 </TableCell>
               </TableRow>
             ))}
+             {!loading && users.length === 0 && <TableRow><TableCell colSpan={4} className="text-center">No team members found.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </div>
