@@ -10,7 +10,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-full">
      <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
