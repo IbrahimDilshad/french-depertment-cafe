@@ -1,3 +1,8 @@
+
+"use client";
+
+import { useCollection } from "@/firebase";
+import { PreOrder, Sale } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -5,8 +10,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, Users } from "lucide-react";
+import { useMemo } from "react";
+import { isToday } from "date-fns";
 
 export default function AdminDashboard() {
+  const { data: sales, loading: salesLoading } = useCollection<Sale>("sales");
+  const { data: preOrders, loading: preOrdersLoading } = useCollection<PreOrder>("preOrders");
+
+  const { totalRevenue, salesToday, newPreOrders } = useMemo(() => {
+    const totalRevenue = sales.reduce((acc, sale) => acc + sale.price * sale.quantity, 0);
+
+    const salesToday = sales.filter(sale => sale.timestamp && isToday(new Date(sale.timestamp.seconds * 1000))).length;
+    
+    const newPreOrders = preOrders.filter(order => order.status === 'Pending').length;
+
+    return { totalRevenue, salesToday, newPreOrders };
+  }, [sales, preOrders]);
+
+  const loading = salesLoading || preOrdersLoading;
+
   return (
     <div>
       <h1 className="text-3xl font-headline mb-6">Admin Dashboard</h1>
@@ -17,10 +39,14 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Rs4,231</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            {loading ? <div className="text-2xl font-bold">...</div> : (
+              <>
+                <div className="text-2xl font-bold">Rs{totalRevenue.toFixed(0)}</div>
+                <p className="text-xs text-muted-foreground">
+                  From all recorded sales.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -29,10 +55,14 @@ export default function AdminDashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+235</div>
-            <p className="text-xs text-muted-foreground">
-              +180.1% from yesterday
-            </p>
+             {loading ? <div className="text-2xl font-bold">...</div> : (
+              <>
+                <div className="text-2xl font-bold">+{salesToday}</div>
+                <p className="text-xs text-muted-foreground">
+                  Number of individual sales today.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -41,10 +71,14 @@ export default function AdminDashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12</div>
-            <p className="text-xs text-muted-foreground">
-              For tomorrow's pickup
-            </p>
+            {loading ? <div className="text-2xl font-bold">...</div> : (
+              <>
+                <div className="text-2xl font-bold">+{newPreOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  Pending confirmation.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
