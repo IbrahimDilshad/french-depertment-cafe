@@ -22,7 +22,7 @@ export function FirebaseClientProvider({
     setFirebase(firebaseInstances);
   }, []);
 
-  if (!firebase || !firebase.firebaseApp || !firebase.auth || !firebase.firestore || !firebase.database) {
+  if (!firebase || !firebase.firebaseApp || !firebase.auth || !firebase.firestore) {
     // You can render a loading state here if needed
     return null;
   }

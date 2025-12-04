@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogIn } from "lucide-react";
 import Logo from "@/components/logo";
 import { UserProfile } from "@/lib/types";
-import { get, ref } from "firebase/database";
-import { useDatabase } from "@/firebase/provider";
+import { doc, getDoc } from "firebase/firestore";
 
 
 export default function LoginPage() {
@@ -29,13 +28,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
-  const db = useDatabase();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) {
+    if (!auth || !firestore) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -48,12 +47,12 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // After successful login, fetch the user's role from Realtime Database
-      const userProfileRef = ref(db, `users/${user.uid}`);
-      const userProfileSnap = await get(userProfileRef);
+      // After successful login, fetch the user's role from Firestore
+      const userProfileRef = doc(firestore, `users/${user.uid}`);
+      const userProfileSnap = await getDoc(userProfileRef);
 
       if (userProfileSnap.exists()) {
-        const userProfile = userProfileSnap.val() as UserProfile;
+        const userProfile = userProfileSnap.data() as UserProfile;
         toast({
           title: "Success",
           description: "Logged in successfully. Redirecting...",

@@ -5,13 +5,11 @@ import { createContext, useContext, ReactNode } from "react";
 import type { FirebaseApp } from "firebase/app";
 import type { Auth } from "firebase/auth";
 import type { Firestore } from "firebase/firestore";
-import type { Database } from "firebase/database";
 
 export interface FirebaseProviderProps {
   firebaseApp: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
-  database: Database;
   children?: ReactNode;
 }
 
@@ -23,10 +21,9 @@ export function FirebaseProvider({
   firebaseApp,
   auth,
   firestore,
-  database,
   children,
 }: FirebaseProviderProps) {
-  const value = { firebaseApp, auth, firestore, database };
+  const value = { firebaseApp, auth, firestore };
   return (
     <FirebaseContext.Provider value={value}>
       {children}
@@ -45,4 +42,6 @@ export const useFirebase = () => {
 export const useFirebaseApp = () => useFirebase().firebaseApp;
 export const useAuth = () => useFirebase().auth;
 export const useFirestore = () => useFirebase().firestore;
-export const useDatabase = () => useFirebase().database;
+export const useDatabase = () => {
+  throw new Error("Realtime Database is not configured for this project. Use useFirestore() instead.");
+}

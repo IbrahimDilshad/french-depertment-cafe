@@ -2,30 +2,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ref, onValue, DatabaseReference } from "firebase/database";
-import { useDatabase } from "@/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
 
 export function useDoc<T>(path: string | null) {
-  const db = useDatabase();
+  const firestore = useFirestore();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!db || !path) {
+    if (!firestore || !path) {
       setLoading(false);
       setData(null);
       return;
     }
 
     setLoading(true);
-    const dbRef: DatabaseReference = ref(db, path);
+    const docRef = doc(firestore, path);
 
-    const unsubscribe = onValue(
-      dbRef,
+    const unsubscribe = onSnapshot(
+      docRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          setData({ id: snapshot.key, ...snapshot.val() } as T);
+          setData({ id: snapshot.id, ...snapshot.data() } as T);
         } else {
           setData(null);
         }
@@ -40,7 +40,7 @@ export function useDoc<T>(path: string | null) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [db, path]);
+  }, [firestore, path]);
 
   return { data, loading, error };
 }

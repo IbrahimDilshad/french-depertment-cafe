@@ -3,7 +3,6 @@
 
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getDatabase, type Database } from "firebase/database";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { firebaseConfig } from "./config";
 
@@ -13,7 +12,6 @@ import {
   useFirebase,
   useFirebaseApp,
   useFirestore,
-  useDatabase,
   useAuth,
 } from "./provider";
 import { useUser } from "./auth/use-user";
@@ -23,7 +21,6 @@ import { useDoc } from "./firestore/use-doc";
 let firebaseApp: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let firestore: Firestore | undefined;
-let database: Database | undefined;
 
 function initializeFirebase() {
   if (!firebaseApp) {
@@ -34,10 +31,9 @@ function initializeFirebase() {
     }
     auth = getAuth(firebaseApp);
     firestore = getFirestore(firebaseApp);
-    database = getDatabase(firebaseApp);
   }
   
-  return { firebaseApp, auth, firestore, database };
+  return { firebaseApp, auth, firestore };
 }
 
 export {
@@ -50,6 +46,5 @@ export {
   useFirebase,
   useFirebaseApp,
   useFirestore,
-  useDatabase,
   useAuth,
 };

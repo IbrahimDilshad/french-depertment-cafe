@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth, useCollection, useDatabase, useUser } from "@/firebase";
+import { useAuth, useCollection, useFirestore, useUser } from "@/firebase";
 import { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,13 +37,13 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { ref, set, update, remove } from "firebase/database";
+import { doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 
 
 export default function TeamManagementPage() {
-  const db = useDatabase();
+  const firestore = useFirestore();
   const auth = useAuth();
   const { toast } = useToast();
   const { user: authUser, loading: authLoading } = useUser();
@@ -65,9 +65,9 @@ export default function TeamManagementPage() {
     // If the authenticated user is loaded and there are no users in the database,
     // this must be the first user. Automatically make them an admin.
     if (!loading && authUser && users.length === 0) {
-      if (!db) return;
+      if (!firestore) return;
 
-      const userProfileRef = ref(db, `users/${authUser.uid}`);
+      const userProfileRef = doc(firestore, `users/${authUser.uid}`);
       const newAdminProfile: Omit<UserProfile, 'id'> = {
         displayName: authUser.displayName || "Admin",
         email: authUser.email!,
@@ -75,7 +75,7 @@ export default function TeamManagementPage() {
         role: "Admin",
       };
 
-      set(userProfileRef, newAdminProfile)
+      setDoc(userProfileRef, newAdminProfile)
         .then(() => {
           toast({
             title: "Admin Account Created",
@@ -91,7 +91,7 @@ export default function TeamManagementPage() {
           });
         });
     }
-  }, [loading, authUser, users, db, toast]);
+  }, [loading, authUser, users, firestore, toast]);
 
 
   const resetForm = () => {
@@ -108,7 +108,7 @@ export default function TeamManagementPage() {
   }
 
   const handleAddTeamMember = async () => {
-    if (!auth || !db) {
+    if (!auth || !firestore) {
       toast({ variant: "destructive", title: "Error", description: "Firebase not initialized." });
       return;
     }
@@ -122,14 +122,14 @@ export default function TeamManagementPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Create the user profile in Realtime Database with the assigned role
+      // 2. Create the user profile in Firestore with the assigned role
       const newUserProfile: Omit<UserProfile, 'id'> = {
         displayName: displayName,
         email: user.email!,
         photoURL: '',
         role: role,
       };
-      await set(ref(db, `users/${user.uid}`), newUserProfile);
+      await setDoc(doc(firestore, `users/${user.uid}`), newUserProfile);
       
       toast({ title: "Success", description: "Team member added successfully." });
       setIsAddDialogOpen(false);
@@ -153,7 +153,7 @@ export default function TeamManagementPage() {
   }
 
   const handleUpdateTeamMember = async () => {
-    if (!db || !currentUser) return;
+    if (!firestore || !currentUser) return;
 
     if (!displayName) {
         toast({ variant: "destructive", title: "Error", description: "Display name is required." });
@@ -161,8 +161,8 @@ export default function TeamManagementPage() {
     }
 
     try {
-        const userRef = ref(db, `users/${currentUser.id}`);
-        await update(userRef, {
+        const userRef = doc(firestore, `users/${currentUser.id}`);
+        await updateDoc(userRef, {
             displayName,
             role
         });
@@ -181,12 +181,12 @@ export default function TeamManagementPage() {
   }
 
   const handleDeleteTeamMember = async () => {
-    if (!db || !currentUser) return;
+    if (!firestore || !currentUser) return;
     try {
         // This is a simplified approach. A full implementation would require a Cloud Function
         // to delete the auth user record. We are just deleting the database record, which revokes access.
-        const userRef = ref(db, `users/${currentUser.id}`);
-        await remove(userRef);
+        const userRef = doc(firestore, `users/${currentUser.id}`);
+        await deleteDoc(userRef);
         toast({ title: "Success", description: `${currentUser.displayName} has been removed from the team.`})
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: `Could not remove user: ${e.message}`})

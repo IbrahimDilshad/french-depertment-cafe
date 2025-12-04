@@ -3,10 +3,9 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getDatabase, ref as dbRef, push, set, serverTimestamp as rtdbServerTimestamp } from "firebase/database";
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { initializeServerApp } from "@/firebase/server-init";
-import { Sale } from "./types";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -50,7 +49,7 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
 
   const { firebaseApp } = initializeServerApp();
   const storage = getStorage(firebaseApp);
-  const database = getDatabase(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
 
   const { studentName, studentClass, cart, paymentScreenshot } = validatedFields.data;
 
@@ -60,17 +59,17 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     const snapshot = await uploadBytes(fileRef, paymentScreenshot);
     const screenshotUrl = await getDownloadURL(snapshot.ref);
 
-    // 2. Save order to Realtime Database
-    const preOrdersRef = dbRef(database, "preOrders");
-    const newPreOrderRef = push(preOrdersRef);
+    // 2. Save order to Firestore
+    const preOrdersCollection = collection(firestore, "preOrders");
     
-    await set(newPreOrderRef, {
+    await addDoc(preOrdersCollection, {
         studentName,
         studentClass,
         items: JSON.parse(cart), // cart is a stringified object
         paymentScreenshotUrl: screenshotUrl,
         status: "Pending",
         pickupDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
+        orderDate: serverTimestamp(),
      });
     
     revalidatePath("/pre-order");
@@ -106,28 +105,3 @@ export async function generateAnnouncement(prevState: any, formData: FormData) {
       audience: isTeamAnnouncement ? 'team' : 'website'
     };
   }
-
-export async function recordSale(itemId: string, itemName: string, price: number, quantity: number) {
-    const { database } = initializeServerApp();
-    
-    const saleData = {
-        itemId,
-        itemName,
-        quantity,
-        price,
-        volunteerId: 'volunteer-pos', // Placeholder
-        timestamp: rtdbServerTimestamp()
-    };
-
-    try {
-        const salesRef = dbRef(database, 'sales');
-        const newSaleRef = push(salesRef);
-        await set(newSaleRef, saleData);
-        revalidatePath("/volunteer");
-        revalidatePath("/");
-        revalidatePath("/admin/analytics");
-        return { success: true };
-    } catch (e: any) {
-        return { success: false, error: e.message };
-    }
-}

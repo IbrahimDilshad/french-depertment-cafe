@@ -11,16 +11,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useCollection, useDatabase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { MenuItem } from "@/lib/types";
 import { useState } from "react";
-import { ref, update } from "firebase/database";
+import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StockManagementPage() {
   const { data: menuItems, loading } = useCollection<MenuItem>("menuItems");
   const [stockLevels, setStockLevels] = useState<Record<string, number>>({});
-  const db = useDatabase();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const handleStockChange = (itemId: string, value: string) => {
@@ -31,13 +31,13 @@ export default function StockManagementPage() {
   };
 
   const handleUpdateStock = async (itemId: string) => {
-    if (!db || stockLevels[itemId] === undefined) return;
+    if (!firestore || stockLevels[itemId] === undefined) return;
     
-    const itemRef = ref(db, `menuItems/${itemId}`);
+    const itemRef = doc(firestore, `menuItems/${itemId}`);
     const newStock = stockLevels[itemId];
 
     try {
-      await update(itemRef, { stock: newStock });
+      await updateDoc(itemRef, { stock: newStock });
       toast({ title: "Success", description: "Stock updated successfully." });
     } catch(e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
