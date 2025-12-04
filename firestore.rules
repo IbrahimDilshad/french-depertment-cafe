@@ -1,12 +1,9 @@
-
 {
   "rules": {
     "users": {
-      // Admins can read the entire list of users.
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'",
       "$uid": {
-        // A user can read their own profile.
-        ".read": "auth != null && auth.uid == $uid",
+        // A user can read their own profile, or an admin can read any profile.
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')",
         // A user can write to their own profile, or an admin can write to any profile.
         ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')"
       }

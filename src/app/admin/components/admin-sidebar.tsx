@@ -74,7 +74,6 @@ const allMenuItems = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { user } = useUser();
-  // We use the RTDB `useCollection` hook which returns an array, but we expect a single user profile object
   const { data: userProfile, loading } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
   
   const userRole = userProfile?.role || null;

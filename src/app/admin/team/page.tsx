@@ -70,6 +70,7 @@ export default function TeamManagementPage() {
         displayName: displayName,
         email: user.email!,
         role: role,
+        photoURL: ''
       };
 
       await set(ref(db, `users/${user.uid}`), newUserProfile);
