@@ -99,7 +99,7 @@ export default function AdminSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
         ))}
-        {!loading && menuItems.map((item) => (
+        {!loading && userRole && menuItems.map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
