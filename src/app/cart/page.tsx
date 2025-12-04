@@ -29,7 +29,7 @@ export default function CartPage() {
     };
 
     const handleAddToCart = (item: MenuItem) => {
-        if ((item.quantity + 1) > item.stock) {
+        if ((cartItems.find(i => i.id === item.id)?.quantity || 0) + 1 > item.stock) {
             toast({ variant: "destructive", title: "Stock limit reached" });
             return;
         }
@@ -56,7 +56,7 @@ export default function CartPage() {
                     {cartItems.map(item => {
                          return (
                             <Card key={item.id} className="flex items-center p-4">
-                                {item.imageId && (
+                                {item.imageId ? (
                                     <Image
                                         src={`/menu/${item.imageId}`}
                                         alt={item.name}
@@ -64,6 +64,10 @@ export default function CartPage() {
                                         height={100}
                                         className="rounded-md object-cover"
                                     />
+                                ): (
+                                    <div className="w-[100px] h-[100px] bg-muted rounded-md flex items-center justify-center">
+                                        <span className="text-xs text-muted-foreground">No Image</span>
+                                    </div>
                                 )}
                                 <div className="ml-4 flex-grow">
                                     <h3 className="font-semibold">{item.name}</h3>

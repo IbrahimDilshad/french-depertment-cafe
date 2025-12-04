@@ -84,7 +84,7 @@ export default function PreOrderPage() {
               return (
                   <Card key={item.id} className="flex flex-col">
                       <CardHeader className="p-0 relative">
-                          {item.imageId && (
+                          {item.imageId ? (
                             <Image
                                 src={`/menu/${item.imageId}`}
                                 alt={item.name}
@@ -92,6 +92,10 @@ export default function PreOrderPage() {
                                 height={200}
                                 className="object-cover w-full h-40 rounded-t-lg"
                             />
+                          ) : (
+                             <div className="w-full h-40 bg-muted rounded-t-lg flex items-center justify-center">
+                                <span className="text-sm text-muted-foreground">No Image</span>
+                            </div>
                           )}
                           <Badge variant="secondary" className="absolute top-2 right-2">{item.stock} in stock</Badge>
                       </CardHeader>

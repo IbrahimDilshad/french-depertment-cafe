@@ -31,7 +31,7 @@ export default function Home() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       
       {latestAnnouncement && (
-         <div className="mb-12 bg-muted p-6 rounded-xl shadow-sm">
+         <div className="mb-12 bg-muted/50 p-6 rounded-xl">
             <div className="flex items-start gap-4">
                 <Megaphone className="h-6 w-6 text-primary mt-1" />
                 <div className="flex-1">
@@ -71,7 +71,7 @@ export default function Home() {
             <Card key={item.id} className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-xl">
               <CardHeader className="p-0">
                 <div className="relative w-full h-48">
-                  {item.imageId && (
+                  {item.imageId ? (
                     <Image
                       src={`/menu/${item.imageId}`}
                       alt={item.name}
@@ -79,6 +79,10 @@ export default function Home() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-cover"
                     />
+                  ) : (
+                     <div className="w-full h-48 bg-muted flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">No Image</span>
+                    </div>
                   )}
                   {item.availability === 'Sold Out' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
