@@ -37,12 +37,12 @@ export default function Home() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       
       {latestAnnouncement && (
-        <div className="mb-12 bg-accent/10 border-l-4 border-accent text-accent-foreground p-6 rounded-lg shadow-md">
-            <div className="flex items-center gap-4">
-                <Megaphone className="h-8 w-8 text-accent" />
-                <div>
-                    <h3 className="text-xl font-headline font-bold text-accent">{latestAnnouncement.title}</h3>
-                    <p className="text-accent-foreground/80 mt-1">{latestAnnouncement.content}</p>
+        <div className="mb-12 bg-muted/50 border border-border p-6 rounded-xl shadow-sm">
+            <div className="flex items-start gap-4">
+                <Megaphone className="h-6 w-6 text-primary mt-1" />
+                <div className="flex-1">
+                    <h3 className="text-xl font-headline font-semibold text-foreground">{latestAnnouncement.title}</h3>
+                    <p className="text-muted-foreground mt-2 whitespace-pre-wrap">{latestAnnouncement.content}</p>
                 </div>
             </div>
         </div>
