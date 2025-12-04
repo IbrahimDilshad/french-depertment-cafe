@@ -85,7 +85,11 @@ export default function MenuManagementPage() {
       setCurrentItem(null);
     } catch (e: any) {
       console.error("Firestore save error:", e);
-      toast({ variant: "destructive", title: "Error saving item", description: e.message });
+      toast({ 
+          variant: "destructive", 
+          title: "Error saving item", 
+          description: e.message || "An unknown error occurred."
+      });
     }
   };
 
