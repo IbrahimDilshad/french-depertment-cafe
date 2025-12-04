@@ -31,7 +31,7 @@ export default function Home() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       
       {latestAnnouncement && (
-         <div className="mb-12 bg-muted/50 border border-border p-6 rounded-xl shadow-sm">
+         <div className="mb-12 bg-muted p-6 rounded-xl shadow-sm">
             <div className="flex items-start gap-4">
                 <Megaphone className="h-6 w-6 text-primary mt-1" />
                 <div className="flex-1">
