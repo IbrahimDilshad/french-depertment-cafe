@@ -1,6 +1,7 @@
 
 import { google } from "googleapis";
 import path from "path";
+import { Readable } from "stream";
 
 const getDriveClient = () => {
   const auth = new google.auth.GoogleAuth({
@@ -30,7 +31,7 @@ export async function uploadFileToDrive(file) {
       },
       media: {
         mimeType: file.type,
-        body: buffer,
+        body: Readable.from(buffer),
       },
       fields: 'id' // Only request the file ID
     });
