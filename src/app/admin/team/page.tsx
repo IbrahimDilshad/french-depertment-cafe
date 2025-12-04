@@ -145,7 +145,7 @@ export default function TeamManagementPage() {
         const userRef = ref(db, `users/${currentUser.id}`);
         await remove(userRef);
         toast({ title: "Success", description: `${currentUser.displayName} has been deleted from the team.`})
-    } catch (e: any) => {
+    } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: `Could not delete user: ${e.message}`})
     } finally {
         setIsDeleteDialogOpen(false);
