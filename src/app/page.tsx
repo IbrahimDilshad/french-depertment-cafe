@@ -73,7 +73,7 @@ export default function Home() {
                 <div className="relative w-full h-48">
                   {item.imageId && (
                     <Image
-                      src={`/main/${item.imageId}`}
+                      src={`/menu/${item.imageId}`}
                       alt={item.name}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

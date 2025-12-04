@@ -58,7 +58,7 @@ export default function CartPage() {
                             <Card key={item.id} className="flex items-center p-4">
                                 {item.imageId && (
                                     <Image
-                                        src={`/main/${item.imageId}`}
+                                        src={`/menu/${item.imageId}`}
                                         alt={item.name}
                                         width={100}
                                         height={100}

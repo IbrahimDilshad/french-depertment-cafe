@@ -86,7 +86,7 @@ export default function PreOrderPage() {
                       <CardHeader className="p-0 relative">
                           {item.imageId && (
                             <Image
-                                src={`/main/${item.imageId}`}
+                                src={`/menu/${item.imageId}`}
                                 alt={item.name}
                                 width={300}
                                 height={200}

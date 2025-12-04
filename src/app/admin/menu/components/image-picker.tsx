@@ -41,7 +41,7 @@ export default function ImagePicker({ selectedImage, onSelectImage }: ImagePicke
     }
 
     if (images.length === 0) {
-        return <div className="h-48 flex items-center justify-center text-center text-muted-foreground bg-muted rounded-md p-4">No images found. Please add image filenames to <code className="bg-background p-1 rounded">src/lib/placeholder-images.json</code> and ensure the files are in the <code className="bg-background p-1 rounded">public/main</code> directory.</div>;
+        return <div className="h-48 flex items-center justify-center text-center text-muted-foreground bg-muted rounded-md p-4">No images found. Please add image filenames to <code className="bg-background p-1 rounded">src/lib/placeholder-images.json</code> and ensure the files are in the <code className="bg-background p-1 rounded">public/menu</code> directory.</div>;
     }
 
     return (
@@ -58,7 +58,7 @@ export default function ImagePicker({ selectedImage, onSelectImage }: ImagePicke
                         )}
                     >
                         <Image
-                            src={`/main/${imageName}`}
+                            src={`/menu/${imageName}`}
                             alt={imageName}
                             fill
                             sizes="100px"
