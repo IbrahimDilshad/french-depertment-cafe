@@ -4,8 +4,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { useAuth, useUser, useDoc } from "@/firebase";
-import { UserProfile } from "@/lib/types";
+import { useAuth, useUser } from "@/firebase";
 import {
   Sidebar,
   SidebarHeader,
@@ -16,7 +15,6 @@ import {
   SidebarTrigger,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Coffee,
@@ -72,22 +70,16 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const auth = useAuth();
   const router = useRouter();
-  const { user } = useUser();
-  const { data: userProfile, loading } = useDoc<UserProfile>(
-    user ? `users/${user.uid}` : null
-  );
-
-  const menuItems = userProfile?.accessiblePages
-    ? allMenuItems.filter((item) =>
-        userProfile.accessiblePages.includes(item.href)
-      )
-    : [];
+  const { user, loading } = useUser();
 
   const handleSignOut = async () => {
     if (!auth) return;
     await signOut(auth);
     router.push("/login");
   };
+
+  // Show all menu items if the user is logged in
+  const menuItems = user ? allMenuItems : [];
 
   return (
     <Sidebar>
@@ -98,7 +90,7 @@ export default function AdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarMenu className="flex-1">
-        {!loading &&
+        {!loading && user &&
           menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton

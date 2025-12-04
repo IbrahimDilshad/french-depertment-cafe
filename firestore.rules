@@ -2,35 +2,20 @@
 {
   "rules": {
     "users": {
-      // Admins with team page access can read the whole list of users.
-      ".read": "auth != null && root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/team')",
-      "$uid": {
-        // An individual user can always read their own profile.
-        ".read": "auth != null && auth.uid == $uid",
-        // Only admins with team page access can write to other user profiles.
-        ".write": "auth != null && (auth.uid == $uid || (root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/team')))"
-      }
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "menuItems": {
-      // Anyone can read the menu.
-      ".read": true,
-      // Only admins can write to menu items.
-      ".write": "auth != null && root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/menu')"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "preOrders": {
-      // Any authenticated user can read pre-orders. Admins have specific write access.
       ".read": "auth != null",
-      "$orderId": {
-        // Anyone can create a new pre-order.
-        // Admins can update an existing one.
-        ".write": "!data.exists() || (auth != null && root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/pre-orders'))"
-      }
+      ".write": "auth != null"
     },
     "sales": {
-       // Any authenticated user can create a sale.
-      ".write": "auth != null",
-       // Any authenticated user can read sales data.
-      ".read": "auth != null"
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
