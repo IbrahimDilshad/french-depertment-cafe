@@ -60,7 +60,7 @@ export default function MenuManagementPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!firestore || !currentItem) {
        toast({ variant: "destructive", title: "Error", description: "Firestore not available. Please try again later." });
        return;
@@ -70,27 +70,39 @@ export default function MenuManagementPage() {
         return;
     }
 
-    try {
-      if (isEditMode && currentItem.id) {
-        const { id, ...itemToUpdate } = currentItem;
-        const itemRef = doc(firestore, "menuItems", id);
-        await updateDoc(itemRef, itemToUpdate);
-        toast({ title: "Success", description: "Menu item updated." });
-      } else {
-        const { id, ...newItem } = currentItem; // remove id before adding
-        await addDoc(collection(firestore, "menuItems"), newItem);
-        toast({ title: "Success", description: "New menu item added." });
-      }
-      setIsDialogOpen(false);
-      setCurrentItem(null);
-    } catch (e: any) {
-      console.error("Firestore save error:", e);
-      toast({ 
-          variant: "destructive", 
-          title: "Error saving item", 
-          description: e.message || "An unknown error occurred."
-      });
+    if (isEditMode && currentItem.id) {
+      const { id, ...itemToUpdate } = currentItem;
+      const itemRef = doc(firestore, "menuItems", id);
+      updateDoc(itemRef, itemToUpdate)
+        .then(() => {
+            toast({ title: "Success", description: "Menu item updated." });
+        })
+        .catch((e: any) => {
+            console.error("Firestore update error:", e);
+            toast({ 
+                variant: "destructive", 
+                title: "Error updating item", 
+                description: e.message || "An unknown error occurred."
+            });
+        });
+    } else {
+      const { id, ...newItem } = currentItem; // remove id before adding
+      addDoc(collection(firestore, "menuItems"), newItem)
+        .then(() => {
+          toast({ title: "Success", description: "New menu item added." });
+        })
+        .catch((e: any) => {
+            console.error("Firestore add error:", e);
+            toast({ 
+                variant: "destructive", 
+                title: "Error adding item", 
+                description: e.message || "An unknown error occurred."
+            });
+        });
     }
+
+    setIsDialogOpen(false);
+    setCurrentItem(null);
   };
 
   return (
