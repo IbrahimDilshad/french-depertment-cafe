@@ -85,13 +85,14 @@ export default function PreOrderPage() {
                   <Card key={item.id} className="flex flex-col">
                       <CardHeader className="p-0 relative">
                           {item.imageId ? (
-                            <Image
-                                src={`/menu/${item.imageId}`}
-                                alt={item.name}
-                                width={300}
-                                height={200}
-                                className="object-cover w-full h-40 rounded-t-lg"
-                            />
+                            <div className="relative w-full h-40">
+                                <Image
+                                    src={`/menu/${item.imageId}`}
+                                    alt={item.name}
+                                    fill
+                                    className="object-cover w-full h-40 rounded-t-lg"
+                                />
+                            </div>
                           ) : (
                              <div className="w-full h-40 bg-muted rounded-t-lg flex items-center justify-center">
                                 <span className="text-sm text-muted-foreground">No Image</span>

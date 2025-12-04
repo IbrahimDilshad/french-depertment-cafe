@@ -57,13 +57,14 @@ export default function CartPage() {
                          return (
                             <Card key={item.id} className="flex items-center p-4">
                                 {item.imageId ? (
-                                    <Image
-                                        src={`/menu/${item.imageId}`}
-                                        alt={item.name}
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md object-cover"
-                                    />
+                                    <div className="relative w-[100px] h-[100px] rounded-md overflow-hidden">
+                                        <Image
+                                            src={`/menu/${item.imageId}`}
+                                            alt={item.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
                                 ): (
                                     <div className="w-[100px] h-[100px] bg-muted rounded-md flex items-center justify-center">
                                         <span className="text-xs text-muted-foreground">No Image</span>
