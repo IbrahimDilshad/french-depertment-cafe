@@ -44,10 +44,7 @@ export default function TeamManagementPage() {
   const db = useDatabase();
   const auth = useAuth();
   const { toast } = useToast();
-  // We will re-enable user listing after the first admin is created.
-  // const { data: users, loading } = useCollection<UserProfile>("users");
-  const users: UserProfile[] = [];
-  const loading = false;
+  const { data: users, loading } = useCollection<UserProfile>("users");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -73,7 +70,7 @@ export default function TeamManagementPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const newUserProfile: Omit<UserProfile, 'id' | 'role'> & { accessiblePages: string[] } = {
+      const newUserProfile: Omit<UserProfile, 'id'> = {
         displayName: displayName,
         email: user.email!,
         photoURL: '',
@@ -97,6 +94,10 @@ export default function TeamManagementPage() {
     setAccessiblePages(prev => 
         prev.includes(pageId) ? prev.filter(p => p !== pageId) : [...prev, pageId]
     );
+  }
+
+  const getPageLabel = (pageId: string) => {
+    return allAdminPages.find(p => p.id === pageId)?.label || pageId;
   }
 
 
@@ -169,7 +170,11 @@ export default function TeamManagementPage() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.displayName}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.accessiblePages?.join(', ') || 'None'}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {user.accessiblePages?.map(pageId => <span key={pageId} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{getPageLabel(pageId)}</span>) || 'None'}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">Edit</Button>
                 </TableCell>
@@ -182,3 +187,5 @@ export default function TeamManagementPage() {
     </div>
   );
 }
+
+    
