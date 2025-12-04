@@ -22,13 +22,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { ref, set } from "firebase/database";
+import { ref, set, update, remove } from "firebase/database";
 
 const allAdminPages = [
   { id: "/admin", label: "Dashboard" },
@@ -46,11 +57,28 @@ export default function TeamManagementPage() {
   const { toast } = useToast();
   const { data: users, loading } = useCollection<UserProfile>("users");
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [accessiblePages, setAccessiblePages] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setDisplayName("");
+    setAccessiblePages([]);
+    setCurrentUser(null);
+  };
+  
+  const handleOpenAddDialog = () => {
+    resetForm();
+    setIsAddDialogOpen(true);
+  }
 
   const handleAddTeamMember = async () => {
     if (!auth || !db) {
@@ -80,15 +108,65 @@ export default function TeamManagementPage() {
       await set(ref(db, `users/${user.uid}`), newUserProfile);
 
       toast({ title: "Success", description: "Team member added successfully." });
-      setIsDialogOpen(false);
-      setEmail("");
-      setPassword("");
-      setDisplayName("");
-      setAccessiblePages([]);
+      setIsAddDialogOpen(false);
+      resetForm();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed to add member", description: error.message });
     }
   };
+
+  const handleOpenEditDialog = (user: UserProfile) => {
+    setCurrentUser(user);
+    setDisplayName(user.displayName);
+    setAccessiblePages(user.accessiblePages || []);
+    setIsEditDialogOpen(true);
+  }
+
+  const handleUpdateTeamMember = async () => {
+    if (!db || !currentUser) return;
+
+    if (!displayName || accessiblePages.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Display name and at least one page access are required." });
+        return;
+    }
+
+    try {
+        const userRef = ref(db, `users/${currentUser.id}`);
+        await update(userRef, {
+            displayName,
+            accessiblePages
+        });
+
+        toast({ title: "Success", description: `${displayName}'s profile has been updated.`});
+        setIsEditDialogOpen(false);
+        resetForm();
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: `Could not update profile: ${e.message}`});
+    }
+  }
+  
+  const handleOpenDeleteDialog = (user: UserProfile) => {
+    setCurrentUser(user);
+    setIsDeleteDialogOpen(true);
+  }
+
+  const handleDeleteTeamMember = async () => {
+    if (!db || !currentUser) return;
+    try {
+        // Note: Deleting a user from the database does not delete them from Firebase Auth.
+        // This is a simplified approach. A full implementation would require a Cloud Function
+        // to delete the auth user record.
+        const userRef = ref(db, `users/${currentUser.id}`);
+        await remove(userRef);
+        toast({ title: "Success", description: `${currentUser.displayName} has been deleted.`})
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: `Could not delete user: ${e.message}`})
+    } finally {
+        setIsDeleteDialogOpen(false);
+        resetForm();
+    }
+  }
+
 
   const handlePageAccessChange = (pageId: string) => {
     setAccessiblePages(prev => 
@@ -105,12 +183,13 @@ export default function TeamManagementPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-headline">Team Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Team Member
-            </Button>
-          </DialogTrigger>
+        <Button onClick={handleOpenAddDialog}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Team Member
+        </Button>
+      </div>
+
+      {/* Add Member Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
@@ -120,16 +199,16 @@ export default function TeamManagementPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="displayName" className="text-right">Display Name</Label>
-                <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="col-span-3" />
+                <Label htmlFor="displayNameAdd" className="text-right">Display Name</Label>
+                <Input id="displayNameAdd" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
+                <Label htmlFor="emailAdd" className="text-right">Email</Label>
+                <Input id="emailAdd" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
+                <Label htmlFor="passwordAdd" className="text-right">Password</Label>
+                <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
               </div>
               <div className="col-span-4 space-y-2">
                 <Label>Page Access</Label>
@@ -137,11 +216,11 @@ export default function TeamManagementPage() {
                     {allAdminPages.map(page => (
                         <div key={page.id} className="flex items-center space-x-2">
                             <Checkbox 
-                                id={page.id} 
+                                id={`add-${page.id}`}
                                 onCheckedChange={() => handlePageAccessChange(page.id)}
                                 checked={accessiblePages.includes(page.id)}
                             />
-                            <Label htmlFor={page.id} className="text-sm font-normal">{page.label}</Label>
+                            <Label htmlFor={`add-${page.id}`} className="text-sm font-normal">{page.label}</Label>
                         </div>
                     ))}
                 </div>
@@ -152,7 +231,59 @@ export default function TeamManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+
+        {/* Edit Member Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Edit Team Member</DialogTitle>
+                    <DialogDescription>Update the display name and page permissions for {currentUser?.email}.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="displayNameEdit" className="text-right">Display Name</Label>
+                        <Input id="displayNameEdit" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="col-span-4 space-y-2">
+                        <Label>Page Access</Label>
+                        <div className="grid grid-cols-2 gap-2 rounded-md border p-2">
+                            {allAdminPages.map(page => (
+                                <div key={page.id} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        id={`edit-${page.id}`} 
+                                        onCheckedChange={() => handlePageAccessChange(page.id)}
+                                        checked={accessiblePages.includes(page.id)}
+                                    />
+                                    <Label htmlFor={`edit-${page.id}`} className="text-sm font-normal">{page.label}</Label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleUpdateTeamMember}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will delete <span className="font-semibold">{currentUser?.displayName}</span> from the database.
+                        This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setCurrentUser(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteTeamMember} className="bg-destructive hover:bg-destructive/90">
+                        Yes, delete user
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
       <div className="border rounded-lg">
         <Table>
@@ -175,8 +306,12 @@ export default function TeamManagementPage() {
                     {user.accessiblePages?.map(pageId => <span key={pageId} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{getPageLabel(pageId)}</span>) || 'None'}
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">Edit</Button>
+                <TableCell className="text-right space-x-1">
+                  <Button variant="ghost" size="sm" onClick={() => handleOpenEditDialog(user)}>Edit</Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90" onClick={() => handleOpenDeleteDialog(user)}>
+                    <Trash2 className="h-4 w-4"/>
+                    <span className="sr-only">Delete</span>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
