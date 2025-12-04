@@ -6,19 +6,19 @@
       ".write": "auth != null"
     },
     "menuItems": {
-      ".read": "auth != null",
+      ".read": true,
       ".write": "auth != null"
     },
     "preOrders": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null || newData.child('studentName').exists()"
     },
     "sales": {
       ".read": "auth != null",
       ".write": "auth != null"
     },
     "announcements": {
-      ".read": "auth != null",
+      ".read": true,
       ".write": "auth != null"
     }
   }
