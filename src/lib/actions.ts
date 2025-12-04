@@ -5,7 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getDatabase, ref, push, set, serverTimestamp } from "firebase/database";
 import { initializeServerApp } from "@/firebase/server-init";
-import { headers } from 'next/headers';
+import { uploadFileToDrive } from "@/lib/googleDrive";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -53,29 +53,12 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
   const { studentName, studentClass, cart, paymentScreenshot } = validatedFields.data;
 
   try {
-    // 1. Upload image via our API endpoint to Google Drive
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', paymentScreenshot);
+    // 1. Upload image directly to Google Drive using the refactored function
+    const screenshotUrl = await uploadFileToDrive(paymentScreenshot);
 
-    const headersList = headers();
-    const host = headersList.get('host') || 'localhost:9002';
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const baseUrl = `${protocol}://${host}`;
-
-    const uploadResponse = await fetch(`${baseUrl}/api/upload`, {
-        method: 'POST',
-        body: uploadFormData,
-    });
-    
-    if (!uploadResponse.ok) {
-        const errorBody = await uploadResponse.json().catch(() => ({ error: 'Upload failed with non-JSON response' }));
-        console.error("Upload API error response:", errorBody);
-        throw new Error(errorBody.error || `Upload to Google Drive failed with status: ${uploadResponse.status}`);
+    if (!screenshotUrl) {
+      throw new Error("Failed to get URL from Google Drive upload.");
     }
-
-    const uploadResult = await uploadResponse.json();
-    const screenshotUrl = uploadResult.url;
-
 
     // 2. Save order to Realtime Database
     const preOrdersRef = ref(database, "preOrders");
