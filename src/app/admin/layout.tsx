@@ -21,13 +21,13 @@ export default function AdminLayout({
   const loading = authLoading || profileLoading;
 
   useEffect(() => {
-    // Redirect if loading is complete and user is not an Admin.
+    // Redirect if loading is complete and user is not logged in.
     if (!loading) {
-        if (!user || !userProfile || userProfile.role !== 'Admin') {
+        if (!user) {
             router.push("/login");
         }
     }
-  }, [user, userProfile, loading, router]);
+  }, [user, loading, router]);
 
   // While loading auth status or profile, show a spinner.
   if (loading) {
@@ -38,12 +38,12 @@ export default function AdminLayout({
     );
   }
   
-  // If user is not an admin, show nothing (will be redirected).
-  if (!userProfile || userProfile.role !== 'Admin') {
+  // If user is not logged in, show nothing (will be redirected).
+  if (!user) {
       return null;
   }
 
-  // Render the admin panel for admin users.
+  // Render the admin panel for any logged-in user.
   return (
     <SidebarProvider>
       <AdminSidebar />
