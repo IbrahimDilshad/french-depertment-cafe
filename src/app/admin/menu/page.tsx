@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
+const defaultItemState: Partial<MenuItem> = {
+    name: '',
+    description: '',
+    price: 0,
+    stock: 0,
+    availability: 'In Stock',
+    imageId: 'croissant',
+    isPreOrderOnly: false,
+};
 
 export default function MenuManagementPage() {
   const firestore = useFirestore();
@@ -38,19 +48,11 @@ export default function MenuManagementPage() {
   const { data: menuItems, loading, error } = useCollection<MenuItem>("menuItems");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentItem, setCurrentItem] = useState<Partial<MenuItem> | null>(null);
+  const [currentItem, setCurrentItem] = useState<Partial<MenuItem>>(defaultItemState);
 
   const openNewItemDialog = () => {
     setIsEditMode(false);
-    setCurrentItem({
-        name: '',
-        description: '',
-        price: 0,
-        stock: 0,
-        availability: 'In Stock',
-        imageId: 'croissant',
-        isPreOrderOnly: false,
-    });
+    setCurrentItem(defaultItemState);
     setIsDialogOpen(true);
   };
 
@@ -59,6 +61,14 @@ export default function MenuManagementPage() {
     setCurrentItem(item);
     setIsDialogOpen(true);
   };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    // Reset to default state instead of null after a short delay
+    setTimeout(() => {
+        setCurrentItem(defaultItemState);
+    }, 150);
+  }
 
   const handleSave = () => {
     if (!firestore || !currentItem) {
@@ -101,8 +111,7 @@ export default function MenuManagementPage() {
         });
     }
 
-    setIsDialogOpen(false);
-    setCurrentItem(null);
+    handleDialogClose();
   };
 
   return (
@@ -114,7 +123,7 @@ export default function MenuManagementPage() {
         </Button>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{isEditMode ? 'Edit' : 'Add New'} Menu Item</DialogTitle>
@@ -125,23 +134,23 @@ export default function MenuManagementPage() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" value={currentItem?.name} onChange={(e) => setCurrentItem({...currentItem, name: e.target.value })} className="col-span-3" />
+                <Input id="name" value={currentItem.name} onChange={(e) => setCurrentItem({...currentItem, name: e.target.value })} className="col-span-3" />
               </div>
                <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description" className="text-right">Description</Label>
-                <Textarea id="description" value={currentItem?.description} onChange={(e) => setCurrentItem({...currentItem, description: e.target.value })} className="col-span-3" />
+                <Textarea id="description" value={currentItem.description} onChange={(e) => setCurrentItem({...currentItem, description: e.target.value })} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="price" className="text-right">Price</Label>
-                <Input id="price" type="number" value={currentItem?.price} onChange={(e) => setCurrentItem({...currentItem, price: Number(e.target.value) })} className="col-span-3" />
+                <Input id="price" type="number" value={currentItem.price} onChange={(e) => setCurrentItem({...currentItem, price: Number(e.target.value) })} className="col-span-3" />
               </div>
                <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="stock" className="text-right">Stock</Label>
-                <Input id="stock" type="number" value={currentItem?.stock} onChange={(e) => setCurrentItem({...currentItem, stock: Number(e.target.value) })} className="col-span-3" />
+                <Input id="stock" type="number" value={currentItem.stock} onChange={(e) => setCurrentItem({...currentItem, stock: Number(e.target.value) })} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="availability" className="text-right">Availability</Label>
-                 <Select value={currentItem?.availability} onValueChange={(value) => setCurrentItem({...currentItem, availability: value as 'In Stock' | 'Sold Out' })}>
+                 <Select value={currentItem.availability} onValueChange={(value) => setCurrentItem({...currentItem, availability: value as 'In Stock' | 'Sold Out' })}>
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -155,7 +164,7 @@ export default function MenuManagementPage() {
                 <Label htmlFor="pre-order-only" className="text-right">Pre-order Only</Label>
                 <Switch 
                     id="pre-order-only"
-                    checked={currentItem?.isPreOrderOnly}
+                    checked={currentItem.isPreOrderOnly}
                     onCheckedChange={(checked) => setCurrentItem({...currentItem, isPreOrderOnly: checked})}
                  />
               </div>
