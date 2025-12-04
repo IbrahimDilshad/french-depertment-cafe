@@ -48,11 +48,12 @@
         "properties": {
             "studentName": { "type": "string" },
             "studentClass": { "type": "string" },
-            "items": { "type": "string" },
+            "items": { "type": "object", "description": "A map of menuItem IDs to quantities." },
+            "paymentScreenshotUrl": { "type": "string", "format": "uri" },
             "pickupDate": { "type": "string", "format": "date-time" },
             "status": { "type": "string", "enum": ["Pending", "Ready", "Completed"] }
         },
-        "required": ["studentName", "studentClass", "items", "pickupDate", "status"]
+        "required": ["studentName", "studentClass", "items", "paymentScreenshotUrl", "pickupDate", "status"]
     },
     "sale": {
         "title": "Sale",

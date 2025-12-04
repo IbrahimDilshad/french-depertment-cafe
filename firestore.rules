@@ -34,8 +34,8 @@ service cloud.firestore {
     }
 
     match /preOrders/{orderId} {
-      // Allow anyone to create a pre-order
-      allow create: if true; 
+      // Allow any logged in user to create a pre-order
+      allow create: if isAppUser(); 
       allow read, update: if isAdmin() || isVolunteer();
     }
 
@@ -45,6 +45,17 @@ service cloud.firestore {
 
     match /{document=**} {
       allow read, write: if false;
+    }
+  }
+}
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow logged-in users to upload payment screenshots to a specific folder
+    match /payment_screenshots/{allPaths=**} {
+      allow write: if request.auth != null
+                    && request.resource.size < 4 * 1024 * 1024 // Max 4MB
+                    && request.resource.contentType.matches('image/.*');
     }
   }
 }
