@@ -42,8 +42,8 @@ export default function AdminLayout({
   if (!user) {
       return null;
   }
-
-  // Render the admin panel for any logged-in user.
+  
+  // For any logged-in user (Admin or Volunteer), show the admin panel.
   return (
     <SidebarProvider>
       <AdminSidebar />

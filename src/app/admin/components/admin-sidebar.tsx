@@ -24,6 +24,7 @@ import {
   BarChart3,
   Megaphone,
   LogOut,
+  ClipboardPen,
 } from "lucide-react";
 import Logo from "@/components/logo";
 import { signOut } from "firebase/auth";
@@ -33,6 +34,11 @@ const menuItems = [
     href: "/admin",
     label: "Dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    href: "/admin/pos",
+    label: "Point of Sale",
+    icon: ClipboardPen,
   },
   {
     href: "/admin/analytics",

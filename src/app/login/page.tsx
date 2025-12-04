@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useDatabase } from "@/firebase";
+import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,22 +19,18 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogIn } from "lucide-react";
 import Logo from "@/components/logo";
-import { UserProfile } from "@/lib/types";
-import { ref, get } from "firebase/database";
-
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
-  const db = useDatabase();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) {
+    if (!auth) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -44,30 +40,14 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       
       toast({
         title: "Success",
         description: "Logged in successfully. Redirecting...",
       });
       
-      const userProfileRef = ref(db, `users/${userCredential.user.uid}`);
-      const snapshot = await get(userProfileRef);
-
-      if (snapshot.exists()) {
-        const userProfile = snapshot.val() as UserProfile;
-        if (userProfile.role === 'Admin') {
-            router.push("/admin");
-        } else if (userProfile.role === 'Volunteer') {
-            router.push("/volunteer");
-        } else {
-            // Default redirect if role is not set or recognized
-            router.push("/login");
-        }
-      } else {
-        // If profile doesn't exist, redirect to admin page for initial setup
-        router.push("/admin");
-      }
+      router.push("/admin");
 
     } catch (error: any) {
       let errorMessage = error.message;
