@@ -2,10 +2,12 @@
 {
   "rules": {
     "users": {
+      // Admins with team page access can read the whole list of users.
+      ".read": "auth != null && root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/team')",
       "$uid": {
-        // A user can read their own profile, or an admin can read any profile.
-        ".read": "auth != null && (auth.uid == $uid || (root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/team')))",
-        // A user can write to their own profile, or an admin can write to any profile.
+        // An individual user can always read their own profile.
+        ".read": "auth != null && auth.uid == $uid",
+        // Only admins with team page access can write to other user profiles.
         ".write": "auth != null && (auth.uid == $uid || (root.child('users').child(auth.uid).hasChild('accessiblePages') && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/team')))"
       }
     },
