@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useActionState, useFormStatus } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
 import { generateAnnouncement } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,7 @@ function GenerateButton() {
 
 
 export default function AnnouncementsPage() {
-    const [state, formAction] = useActionState(generateAnnouncement, {
+    const [state, formAction] = useFormState(generateAnnouncement, {
         announcement: `Dear students and staff,\n\nWe are excited to announce an update at our café regarding **our new seasonal menu**. Come and see what's new!\n\nThank you,\nThe Café Team`,
         audience: 'website'
     });
