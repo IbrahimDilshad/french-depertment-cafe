@@ -3,9 +3,9 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getFirestore, addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { initializeFirebase } from "@/firebase";
+import { getDatabase, ref as dbRef, push, set, serverTimestamp as rtdbServerTimestamp } from "firebase/database";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { initializeServerApp } from "@/firebase/server-init";
 import { Sale } from "./types";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
@@ -48,18 +48,23 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     };
   }
 
-  const { firestore, firebaseApp } = initializeFirebase();
+  const { firebaseApp } = initializeServerApp();
   const storage = getStorage(firebaseApp);
+  const database = getDatabase(firebaseApp);
+
   const { studentName, studentClass, cart, paymentScreenshot } = validatedFields.data;
 
   try {
     // 1. Upload image to Firebase Storage
-    const storageRef = ref(storage, `payment_screenshots/${Date.now()}_${paymentScreenshot.name}`);
-    const snapshot = await uploadBytes(storageRef, paymentScreenshot);
+    const fileRef = storageRef(storage, `payment_screenshots/${Date.now()}_${paymentScreenshot.name}`);
+    const snapshot = await uploadBytes(fileRef, paymentScreenshot);
     const screenshotUrl = await getDownloadURL(snapshot.ref);
 
-    // 2. Save order to Firestore
-    await addDoc(collection(firestore, "preOrders"), {
+    // 2. Save order to Realtime Database
+    const preOrdersRef = dbRef(database, "preOrders");
+    const newPreOrderRef = push(preOrdersRef);
+    
+    await set(newPreOrderRef, {
         studentName,
         studentClass,
         items: JSON.parse(cart), // cart is a stringified object
@@ -103,19 +108,21 @@ export async function generateAnnouncement(prevState: any, formData: FormData) {
   }
 
 export async function recordSale(itemId: string, itemName: string, price: number, quantity: number) {
-    const { firestore } = initializeFirebase();
+    const { database } = initializeServerApp();
     
-    const saleData: Omit<Sale, 'id' | 'timestamp'> & { timestamp: any } = {
+    const saleData = {
         itemId,
         itemName,
         quantity,
         price,
         volunteerId: 'volunteer-pos', // Placeholder
-        timestamp: serverTimestamp()
+        timestamp: rtdbServerTimestamp()
     };
 
     try {
-        await addDoc(collection(firestore, 'sales'), saleData);
+        const salesRef = dbRef(database, 'sales');
+        const newSaleRef = push(salesRef);
+        await set(newSaleRef, saleData);
         revalidatePath("/volunteer");
         revalidatePath("/");
         revalidatePath("/admin/analytics");
