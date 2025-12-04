@@ -1,4 +1,5 @@
 
 // This file is no longer in use and can be safely deleted.
-// Image management is now handled via the public/menu directory.
+// Image management is now handled via src/lib/placeholder-images.json
+// and the public/menu directory.
 export {};

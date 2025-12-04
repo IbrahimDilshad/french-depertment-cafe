@@ -1,4 +1,7 @@
+
 import type { MenuItem, PreOrder, Sale, ClassSale } from './types';
+
+// This file contains placeholder data for initial development and can be removed or modified.
 
 export const menuItems: MenuItem[] = [];
 export const preOrders: PreOrder[] = [];

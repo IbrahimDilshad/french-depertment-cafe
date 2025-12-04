@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { getMenuImages } from '@/lib/menu-images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ImagePickerProps {
     selectedImage?: string;
@@ -18,6 +19,7 @@ export default function ImagePicker({ selectedImage, onSelectImage }: ImagePicke
 
     useEffect(() => {
         async function fetchImages() {
+            setLoading(true);
             try {
                 const imageList = await getMenuImages();
                 setImages(imageList);
@@ -31,11 +33,15 @@ export default function ImagePicker({ selectedImage, onSelectImage }: ImagePicke
     }, []);
 
     if (loading) {
-        return <div className="h-48 flex items-center justify-center text-muted-foreground">Loading images...</div>;
+        return (
+             <div className="h-48 p-4 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="aspect-square rounded-md" />)}
+             </div>
+        )
     }
 
     if (images.length === 0) {
-        return <div className="h-48 flex items-center justify-center text-center text-muted-foreground bg-muted rounded-md p-4">No images found in the <code className="bg-background p-1 rounded">public/menu</code> directory. Please upload some images first.</div>;
+        return <div className="h-48 flex items-center justify-center text-center text-muted-foreground bg-muted rounded-md p-4">No images found. Please add image filenames to <code className="bg-background p-1 rounded">src/lib/placeholder-images.json</code> and ensure the files are in the <code className="bg-background p-1 rounded">public/menu</code> directory.</div>;
     }
 
     return (
