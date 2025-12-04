@@ -35,6 +35,8 @@ import {
   MinusCircle,
   Upload,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -79,7 +81,19 @@ export default function PreOrderPage() {
   };
 
   const addToCart = (itemId: string) => {
-    setCart((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
+    const item = menuItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    const currentQuantity = cart[itemId] || 0;
+    if (currentQuantity < item.stock) {
+        setCart((prev) => ({ ...prev, [itemId]: currentQuantity + 1 }));
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Stock limit reached",
+            description: `You cannot add more of ${item.name}.`,
+        });
+    }
   };
 
   const removeFromCart = (itemId: string) => {
@@ -94,7 +108,6 @@ export default function PreOrderPage() {
     });
   };
 
-  // Show only items that are pre-order only and in stock
   const availableItems = menuItems.filter(
     (item) => item.isPreOrderOnly && item.availability === "In Stock"
   );
@@ -228,34 +241,38 @@ export default function PreOrderPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {availableItems.map((item) => {
                     const image = getImage(item.imageId);
+                    const currentQuantity = cart[item.id] || 0;
+                    const stockLimitReached = currentQuantity >= item.stock;
+
                     return (
                         <Card key={item.id} className="flex flex-col">
-                        <CardHeader className="p-0">
-                            <Image
-                                src={image.imageUrl}
-                                alt={item.name}
-                                width={300}
-                                height={200}
-                                className="object-cover w-full h-40 rounded-t-lg"
-                                data-ai-hint={image.imageHint}
-                            />
-                        </CardHeader>
-                        <CardContent className="flex-1 p-4">
-                            <CardTitle className="text-lg font-headline">{item.name}</CardTitle>
-                            <CardDescription className="text-sm mt-1 h-10">{item.description}</CardDescription>
-                        </CardContent>
-                        <CardFooter className="p-4 flex justify-between items-center">
-                            <p className="font-bold text-primary">Rs{item.price.toFixed(0)}</p>
-                            <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.id)} disabled={!cart[item.id]}>
-                                <MinusCircle className="h-4 w-4" />
-                            </Button>
-                            <span className="w-4 text-center">{cart[item.id] || 0}</span>
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => addToCart(item.id)}>
-                                <PlusCircle className="h-4 w-4" />
-                            </Button>
-                            </div>
-                        </CardFooter>
+                            <CardHeader className="p-0 relative">
+                                <Image
+                                    src={image.imageUrl}
+                                    alt={item.name}
+                                    width={300}
+                                    height={200}
+                                    className="object-cover w-full h-40 rounded-t-lg"
+                                    data-ai-hint={image.imageHint}
+                                />
+                                <Badge variant="secondary" className="absolute top-2 right-2">{item.stock} in stock</Badge>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-4">
+                                <CardTitle className="text-lg font-headline">{item.name}</CardTitle>
+                                <CardDescription className="text-sm mt-1 h-10">{item.description}</CardDescription>
+                            </CardContent>
+                            <CardFooter className="p-4 flex justify-between items-center">
+                                <p className="font-bold text-primary">Rs{item.price.toFixed(0)}</p>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.id)} disabled={!cart[item.id]}>
+                                        <MinusCircle className="h-4 w-4" />
+                                    </Button>
+                                    <span className="w-4 text-center">{currentQuantity}</span>
+                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => addToCart(item.id)} disabled={stockLimitReached}>
+                                        <PlusCircle className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </CardFooter>
                         </Card>
                     );
                     })}

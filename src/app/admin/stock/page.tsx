@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,30 +11,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useDatabase } from "@/firebase";
 import { MenuItem } from "@/lib/types";
 import { useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { ref, update } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StockManagementPage() {
   const { data: menuItems, loading } = useCollection<MenuItem>("menuItems");
   const [stockLevels, setStockLevels] = useState<Record<string, number>>({});
-  const firestore = useFirestore();
+  const db = useDatabase();
   const { toast } = useToast();
 
   const handleStockChange = (itemId: string, value: string) => {
-    setStockLevels(prev => ({ ...prev, [itemId]: Number(value) }));
+    const newStock = Number(value);
+    if (!isNaN(newStock) && newStock >= 0) {
+      setStockLevels(prev => ({ ...prev, [itemId]: newStock }));
+    }
   };
 
   const handleUpdateStock = async (itemId: string) => {
-    if (!firestore || stockLevels[itemId] === undefined) return;
+    if (!db || stockLevels[itemId] === undefined) return;
     
-    const itemRef = doc(firestore, "menuItems", itemId);
+    const itemRef = ref(db, `menuItems/${itemId}`);
     const newStock = stockLevels[itemId];
 
     try {
-      await updateDoc(itemRef, { stock: newStock });
+      await update(itemRef, { stock: newStock });
       toast({ title: "Success", description: "Stock updated successfully." });
     } catch(e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
@@ -65,6 +69,7 @@ export default function StockManagementPage() {
                     type="number" 
                     placeholder="Set new quantity" 
                     className="h-8"
+                    value={stockLevels[item.id] ?? ''}
                     onChange={(e) => handleStockChange(item.id, e.target.value)}
                   />
                 </TableCell>
