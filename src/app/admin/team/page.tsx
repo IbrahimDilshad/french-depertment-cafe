@@ -59,28 +59,6 @@ export default function TeamManagementPage() {
   const [role, setRole] = useState<UserProfile['role']>('Volunteer');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
-  // This effect will run once when the component mounts.
-  // If there are no users in the database and an authenticated user exists,
-  // it creates an Admin profile for that user.
-  useEffect(() => {
-    if (!loading && users.length === 0 && authUser && db) {
-      const firstAdminProfile: Omit<UserProfile, 'id'> = {
-        displayName: authUser.displayName || 'Admin',
-        email: authUser.email!,
-        photoURL: authUser.photoURL || '',
-        role: 'Admin',
-      };
-      set(ref(db, `users/${authUser.uid}`), firstAdminProfile)
-        .then(() => {
-          toast({ title: "Welcome!", description: "Your admin account has been set up." });
-        })
-        .catch((e) => {
-          toast({ variant: "destructive", title: "Setup Error", description: `Could not create initial admin user: ${e.message}`});
-        });
-    }
-  }, [loading, users, authUser, db, toast]);
-
-
   const resetForm = () => {
     setEmail("");
     setPassword("");
@@ -105,19 +83,33 @@ export default function TeamManagementPage() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // A special case for the first user (the admin).
+      // If no users exist and the email matches the current logged-in user,
+      // create a DB entry for them instead of a new auth user.
+      if (users.length === 0 && authUser && authUser.email === email) {
+        const newUserProfile: Omit<UserProfile, 'id'> = {
+          displayName: displayName,
+          email: authUser.email!,
+          photoURL: '',
+          role: role,
+        };
+        await set(ref(db, `users/${authUser.uid}`), newUserProfile);
+        toast({ title: "Success", description: "Admin user created successfully." });
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-      const newUserProfile: Omit<UserProfile, 'id'> = {
-        displayName: displayName,
-        email: user.email!,
-        photoURL: '',
-        role: role,
-      };
+        const newUserProfile: Omit<UserProfile, 'id'> = {
+          displayName: displayName,
+          email: user.email!,
+          photoURL: '',
+          role: role,
+        };
+        await set(ref(db, `users/${user.uid}`), newUserProfile);
+        toast({ title: "Success", description: "Team member added successfully." });
+      }
 
-      await set(ref(db, `users/${user.uid}`), newUserProfile);
 
-      toast({ title: "Success", description: "Team member added successfully." });
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
@@ -205,7 +197,7 @@ export default function TeamManagementPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="passwordAdd" className="text-right">Password</Label>
-                <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
+                <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" placeholder={users.length === 0 ? "Not required for first user" : ""}/>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Role</Label>

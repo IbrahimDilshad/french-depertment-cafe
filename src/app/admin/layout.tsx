@@ -22,15 +22,20 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!loading) {
-      // If loading is complete and there's no user, or the user is not an Admin, redirect
-      if (!user || !userProfile || userProfile.role !== "Admin") {
+      // If loading is complete and there's no user, redirect to login.
+      if (!user) {
+        router.push("/login");
+      }
+      // If a profile exists and the user is NOT an admin, redirect.
+      // This allows access if the profile hasn't been created yet.
+      if (userProfile && userProfile.role !== "Admin") {
         router.push("/login");
       }
     }
   }, [user, userProfile, loading, router]);
 
-  // While loading or if user is not an admin, show loading screen
-  if (loading || !userProfile || userProfile.role !== "Admin") {
+  // While loading auth status, show a spinner.
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -38,7 +43,26 @@ export default function AdminLayout({
     );
   }
 
-  // Only if there is a logged-in Admin user, render the admin panel.
+  // If user is not logged in after loading, show nothing (will be redirected).
+  if (!user) {
+      return null;
+  }
+
+  // If profile exists and it's not an admin profile, show nothing (will be redirected).
+  if (profileLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (userProfile && userProfile.role !== 'Admin') {
+    return null;
+  }
+  
+
+  // Only if there is a logged-in user who is an Admin (or doesn't have a profile yet), render the admin panel.
   return (
     <SidebarProvider>
       <AdminSidebar />
