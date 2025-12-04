@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { useAuth, useCollection, useDatabase } from "@/firebase";
+import { useState, useEffect } from "react";
+import { useAuth, useCollection, useDatabase, useUser } from "@/firebase";
 import { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +45,7 @@ import { Badge } from "@/components/ui/badge";
 export default function TeamManagementPage() {
   const db = useDatabase();
   const auth = useAuth();
+  const { user: authUser } = useUser();
   const { toast } = useToast();
   const { data: users, loading } = useCollection<UserProfile>("users");
 
@@ -57,6 +58,28 @@ export default function TeamManagementPage() {
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<UserProfile['role']>('Volunteer');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  // This effect will run once when the component mounts.
+  // If there are no users in the database and an authenticated user exists,
+  // it creates an Admin profile for that user.
+  useEffect(() => {
+    if (!loading && users.length === 0 && authUser && db) {
+      const firstAdminProfile: Omit<UserProfile, 'id'> = {
+        displayName: authUser.displayName || 'Admin',
+        email: authUser.email!,
+        photoURL: authUser.photoURL || '',
+        role: 'Admin',
+      };
+      set(ref(db, `users/${authUser.uid}`), firstAdminProfile)
+        .then(() => {
+          toast({ title: "Welcome!", description: "Your admin account has been set up." });
+        })
+        .catch((e) => {
+          toast({ variant: "destructive", title: "Setup Error", description: `Could not create initial admin user: ${e.message}`});
+        });
+    }
+  }, [loading, users, authUser, db, toast]);
+
 
   const resetForm = () => {
     setEmail("");
