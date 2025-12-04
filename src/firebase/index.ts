@@ -18,25 +18,22 @@ import { useUser } from "./auth/use-user";
 import { useCollection } from "./firestore/use-collection";
 import { useDoc } from "./firestore/use-doc";
 
-// This function is memoized, so it will only run once.
 let firebaseApp: FirebaseApp | undefined;
-function getFirebaseApp() {
-  if (firebaseApp) {
-    return firebaseApp;
-  }
-  if (getApps().length === 0) {
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    firebaseApp = getApps()[0];
-  }
-  return firebaseApp;
-}
+let auth: Auth | undefined;
+let firestore: Firestore | undefined;
 
 function initializeFirebase() {
-  const app = getFirebaseApp();
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  return { firebaseApp: app, auth, firestore };
+  if (!firebaseApp) {
+    if (getApps().length === 0) {
+      firebaseApp = initializeApp(firebaseConfig);
+    } else {
+      firebaseApp = getApps()[0];
+    }
+    auth = getAuth(firebaseApp);
+    firestore = getFirestore(firebaseApp);
+  }
+  
+  return { firebaseApp, auth, firestore };
 }
 
 export {
@@ -51,3 +48,5 @@ export {
   useFirestore,
   useAuth,
 };
+
+    

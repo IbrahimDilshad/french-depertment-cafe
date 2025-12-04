@@ -22,9 +22,11 @@ export function useCollection<T>(path: string) {
   useEffect(() => {
     if (!firestore) {
       // Firestore might not be initialized yet, so we wait.
+      // We don't set loading to false here, to avoid a flash of "no data".
       return;
     }
 
+    setLoading(true);
     const collectionQuery: Query<DocumentData> = query(collection(firestore, path));
 
     const unsubscribe = onSnapshot(
@@ -36,6 +38,7 @@ export function useCollection<T>(path: string) {
         })) as T[];
         setData(documents);
         setLoading(false);
+        setError(null);
       },
       (err: FirestoreError) => {
         console.error(`Error fetching collection at ${path}:`, err);
@@ -50,3 +53,5 @@ export function useCollection<T>(path: string) {
 
   return { data, loading, error };
 }
+
+    

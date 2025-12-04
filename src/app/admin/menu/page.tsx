@@ -70,11 +70,11 @@ export default function MenuManagementPage() {
   }
 
   const handleSave = () => {
-    if (!firestore || !currentItem) {
-       toast({ variant: "destructive", title: "Error", description: "Firestore not available. Please try again later." });
+    if (!firestore) {
+       toast({ variant: "destructive", title: "Error", description: "Firestore is not properly initialized. Please refresh and try again." });
        return;
     }
-    if (!currentItem.name) {
+    if (!currentItem || !currentItem.name) {
         toast({ variant: "destructive", title: "Error", description: "Item name is required." });
         return;
     }
@@ -91,7 +91,7 @@ export default function MenuManagementPage() {
             toast({ 
                 variant: "destructive", 
                 title: "Error updating item", 
-                description: e.message || "An unknown error occurred."
+                description: e.message || "An unknown error occurred. Check the console and Firestore rules."
             });
         });
     } else {
@@ -105,7 +105,7 @@ export default function MenuManagementPage() {
             toast({ 
                 variant: "destructive", 
                 title: "Error adding item", 
-                description: e.message || "An unknown error occurred."
+                description: e.message || "An unknown error occurred. Check the console and Firestore rules."
             });
         });
     }
@@ -187,8 +187,8 @@ export default function MenuManagementPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
-            {error && <TableRow><TableCell colSpan={6} className="text-center text-destructive">{error.message}</TableCell></TableRow>}
+            {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading menu from Firestore...</TableCell></TableRow>}
+            {error && <TableRow><TableCell colSpan={6} className="text-center text-destructive">Error: {error.message}</TableCell></TableRow>}
             {!loading && menuItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
@@ -209,9 +209,11 @@ export default function MenuManagementPage() {
                 </TableCell>
               </TableRow>
             ))}
+             {!loading && menuItems.length === 0 && <TableRow><TableCell colSpan={6} className="text-center">No menu items found. Add one to get started!</TableCell></TableRow>}
           </TableBody>
         </Table>
       </div>
     </div>
   );
-}
+
+    
