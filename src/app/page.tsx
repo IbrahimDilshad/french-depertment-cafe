@@ -23,7 +23,7 @@ export default function Home() {
     return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
   };
 
-  const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly);
+  const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly && item.availability === 'In Stock');
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">

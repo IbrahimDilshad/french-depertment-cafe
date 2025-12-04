@@ -4,7 +4,7 @@
 import { useState, useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection } from "@/firebase";
 import { handlePreOrder } from "@/lib/actions";
 import { MenuItem } from "@/lib/types";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -213,7 +213,7 @@ export default function PreOrderPage() {
           Pre-order Menu
         </h1>
         <p className="text-lg text-muted-foreground">
-          Order ahead for next-day pickup.
+          Order ahead for next-day pickup. All in-stock items are available.
         </p>
       </div>
       
@@ -294,4 +294,3 @@ export default function PreOrderPage() {
     </div>
   );
 }
-
