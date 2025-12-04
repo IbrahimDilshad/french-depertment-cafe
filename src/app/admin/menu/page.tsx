@@ -85,6 +85,7 @@ export default function MenuManagementPage() {
       updateDoc(itemRef, itemToUpdate)
         .then(() => {
             toast({ title: "Success", description: "Menu item updated." });
+            handleDialogClose();
         })
         .catch((e: any) => {
             console.error("Firestore update error:", e);
@@ -99,6 +100,7 @@ export default function MenuManagementPage() {
       addDoc(collection(firestore, "menuItems"), newItem)
         .then(() => {
           toast({ title: "Success", description: "New menu item added." });
+          handleDialogClose();
         })
         .catch((e: any) => {
             console.error("Firestore add error:", e);
@@ -109,8 +111,6 @@ export default function MenuManagementPage() {
             });
         });
     }
-
-    handleDialogClose();
   };
 
   return (
@@ -215,5 +215,7 @@ export default function MenuManagementPage() {
       </div>
     </div>
   );
+
+    
 
     
