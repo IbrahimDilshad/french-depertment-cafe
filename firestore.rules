@@ -16,8 +16,8 @@
       ".write": "auth != null && root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/menu')"
     },
     "preOrders": {
-      // Admins and volunteers can read all pre-orders.
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/pre-orders'))",
+      // Users with access to the dashboard or the pre-orders page can read all pre-orders.
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/pre-orders') || root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin'))",
       "$orderId": {
         // Anyone can create a new pre-order.
         // Admins and volunteers can update an existing one.
@@ -27,8 +27,8 @@
     "sales": {
        // Admins and volunteers can create sales.
       ".write": "auth != null",
-       // Only admins and volunteers can read sales data.
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/analytics'))"
+       // Users with access to the dashboard or analytics page can read sales data.
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin/analytics') || root.child('users').child(auth.uid).child('accessiblePages').val().contains('/admin'))"
     }
   }
 }
