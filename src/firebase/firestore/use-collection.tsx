@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,6 +21,7 @@ export function useCollection<T>(path: string) {
 
   useEffect(() => {
     if (!firestore) {
+      // Firestore might not be initialized yet, so we wait.
       return;
     }
 
@@ -36,13 +38,15 @@ export function useCollection<T>(path: string) {
         setLoading(false);
       },
       (err: FirestoreError) => {
+        console.error(`Error fetching collection at ${path}:`, err);
         setError(err);
         setLoading(false);
       }
     );
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, path]);
+  }, [firestore, path]); // Rerun effect if firestore instance or path changes
 
   return { data, loading, error };
 }
