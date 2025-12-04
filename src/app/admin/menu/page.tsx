@@ -148,7 +148,7 @@ export default function MenuManagementPage() {
             {!loading && menuItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>${item.price.toFixed(2)}</TableCell>
+                <TableCell>Rs{item.price.toFixed(0)}</TableCell>
                 <TableCell>
                   <Badge variant={item.availability === 'In Stock' ? 'secondary' : 'destructive'}>
                     {item.availability}

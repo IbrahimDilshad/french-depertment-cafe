@@ -144,13 +144,13 @@ export default function PreOrderPage() {
                     {cartItems.map(item => (
                         <li key={item.id} className="flex justify-between">
                             <span>{item.name} x {item.quantity}</span>
-                            <span>${(item.price * item.quantity).toFixed(2)}</span>
+                            <span>Rs{(item.price * item.quantity).toFixed(0)}</span>
                         </li>
                     ))}
                 </ul>
                 <div className="flex justify-between font-bold mt-2 pt-2 border-t">
                     <span>Total</span>
-                    <span>${totalCost.toFixed(2)}</span>
+                    <span>Rs{totalCost.toFixed(0)}</span>
                 </div>
               </div>
 
@@ -178,7 +178,7 @@ export default function PreOrderPage() {
               <div>
                 <Label>Payment</Label>
                 <div className="bg-muted p-4 rounded-md text-sm mt-2 space-y-2">
-                    <p>Please send <strong className="text-primary">${totalCost.toFixed(2)}</strong> to the following account:</p>
+                    <p>Please send <strong className="text-primary">Rs{totalCost.toFixed(0)}</strong> to the following account:</p>
                     <p className="font-mono bg-background p-2 rounded-md">Easypaisa / Sada Pay: 03703702440</p>
                     <p>After payment, upload a screenshot below.</p>
                 </div>
@@ -239,7 +239,7 @@ export default function PreOrderPage() {
                      <CardDescription className="text-sm mt-1 h-10">{item.description}</CardDescription>
                   </CardContent>
                   <CardFooter className="p-4 flex justify-between items-center">
-                    <p className="font-bold text-primary">${item.price.toFixed(2)}</p>
+                    <p className="font-bold text-primary">Rs{item.price.toFixed(0)}</p>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.id)} disabled={!cart[item.id]}>
                         <MinusCircle className="h-4 w-4" />
@@ -271,9 +271,9 @@ export default function PreOrderPage() {
                         <li key={item.id} className="flex justify-between items-center text-sm">
                             <div>
                                 <p className="font-medium">{item.name}</p>
-                                <p className="text-muted-foreground">${item.price.toFixed(2)} x {item.quantity}</p>
+                                <p className="text-muted-foreground">Rs{item.price.toFixed(0)} x {item.quantity}</p>
                             </div>
-                             <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                             <p className="font-semibold">Rs{(item.price * item.quantity).toFixed(0)}</p>
                         </li>
                     ))}
                 </ul>
@@ -282,7 +282,7 @@ export default function PreOrderPage() {
             <CardFooter className="flex-col space-y-4">
               <div className="w-full flex justify-between font-bold text-lg border-t pt-4">
                 <span>Total</span>
-                <span>${totalCost.toFixed(2)}</span>
+                <span>Rs{totalCost.toFixed(0)}</span>
               </div>
               <Button className="w-full" onClick={() => setStep('checkout')} disabled={cartItems.length === 0}>
                 <ShoppingCart className="mr-2 h-4 w-4" /> Proceed to Checkout

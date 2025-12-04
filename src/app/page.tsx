@@ -61,7 +61,7 @@ export default function Home() {
               </CardContent>
               <CardFooter className="p-6 pt-0">
                 <p className="text-lg font-bold text-primary">
-                  ${item.price.toFixed(2)}
+                  Rs{item.price.toFixed(0)}
                 </p>
               </CardFooter>
             </Card>

@@ -50,7 +50,7 @@ export default function VolunteerDashboard() {
                   {item.stock} in stock
                 </Badge>
               </div>
-              <CardDescription>Price: ${item.price.toFixed(2)}</CardDescription>
+              <CardDescription>Price: Rs{item.price.toFixed(0)}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
                <div className="flex items-center justify-center space-x-4 p-4 bg-muted rounded-lg">
