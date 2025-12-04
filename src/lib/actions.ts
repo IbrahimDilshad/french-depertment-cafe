@@ -82,27 +82,3 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     return { error: `Failed to submit pre-order. ${e.message}` };
   }
 }
-
-export async function generateAnnouncement(prevState: any, formData: FormData) {
-    const topic = formData.get("topic") as string;
-  
-    if (!topic || topic.trim() === "") {
-      return {
-        error: "Please provide a topic for the announcement.",
-      };
-    }
-  
-    const isTeamAnnouncement = formData.get("audience") === "team";
-  
-    // In a real app, this would call a Genkit AI flow
-    await new Promise(resolve => setTimeout(resolve, 100)); 
-  
-    const generatedText = isTeamAnnouncement
-      ? `Team Update:\n\nPlease be aware of the following: ${topic}. Let's work together to ensure a smooth service.`
-      : `Dear students and staff,\n\nWe are excited to announce an update at our café regarding **${topic}**. Come and see what's new!\n\nThank you,\nThe Café Team`;
-  
-    return {
-      announcement: generatedText,
-      audience: isTeamAnnouncement ? 'team' : 'website'
-    };
-  }

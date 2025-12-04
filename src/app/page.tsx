@@ -10,24 +10,42 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection } from '@/firebase';
-import { MenuItem } from '@/lib/types';
+import { MenuItem, Announcement } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Megaphone } from 'lucide-react';
 
 export default function Home() {
-  const { data: menuItems, loading } = useCollection<MenuItem>('menuItems');
+  const { data: menuItems, loading: menuLoading } = useCollection<MenuItem>('menuItems');
+  const { data: announcements, loading: announcementsLoading } = useCollection<Announcement>('announcements');
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
   };
 
+  const loading = menuLoading || announcementsLoading;
+  
   // Show only daily items (not pre-order) that are in stock
   const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly && item.availability === 'In Stock');
 
+  const latestAnnouncement = announcements.sort((a,b) => b.createdAt - a.createdAt)[0];
+
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
+      
+      {latestAnnouncement && (
+        <Alert className="mb-10 bg-primary/5 border-primary/20">
+          <Megaphone className="h-4 w-4 !text-primary" />
+          <AlertTitle className="text-primary font-bold">{latestAnnouncement.title}</AlertTitle>
+          <AlertDescription>
+            {latestAnnouncement.content}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
           Daily Menu

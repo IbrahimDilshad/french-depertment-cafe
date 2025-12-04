@@ -1,27 +1,31 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { generateAnnouncement } from "@/lib/actions";
+import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Wand2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { useCollection, useDatabase } from "@/firebase";
+import { Announcement } from "@/lib/types";
+import { ref, push, set, serverTimestamp, remove } from "firebase/database";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
 
-function GenerateButton() {
+function SubmitButton() {
     const { pending } = useFormStatus();
     return (
         <Button type="submit" disabled={pending}>
             {pending ? (
                 <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...
                 </>
             ) : (
                 <>
-                    <Wand2 className="mr-2 h-4 w-4" /> Generate
+                    <PlusCircle className="mr-2 h-4 w-4" /> Publish Announcement
                 </>
             )}
         </Button>
@@ -30,103 +34,109 @@ function GenerateButton() {
 
 
 export default function AnnouncementsPage() {
-    const [state, formAction] = useFormState(generateAnnouncement, {
-        announcement: `Dear students and staff,\n\nWe are excited to announce an update at our café regarding **our new seasonal menu**. Come and see what's new!\n\nThank you,\nThe Café Team`,
-        audience: 'website'
-    });
-    const [teamAnnouncement, setTeamAnnouncement] = useState('Team Update:\n\nPlease be aware of the following: a reminder about the upcoming stock take this Friday. Let\'s work together to ensure a smooth service.');
-    const formRef = useRef<HTMLFormElement>(null);
+    const { toast } = useToast();
+    const db = useDatabase();
+    const { data: announcements, loading } = useCollection<Announcement>("announcements");
 
-    useEffect(() => {
-        if(state?.announcement) {
-            if(state.audience === 'team') {
-                setTeamAnnouncement(state.announcement);
-            }
-            formRef.current?.reset();
+    const handlePublish = async (formData: FormData) => {
+        const title = formData.get("title") as string;
+        const content = formData.get("content") as string;
+
+        if (!title || !content) {
+            toast({ variant: "destructive", title: "Error", description: "Title and content are required." });
+            return;
         }
-    }, [state]);
+
+        if (!db) {
+            toast({ variant: "destructive", title: "Error", description: "Database not connected." });
+            return;
+        }
+
+        try {
+            const announcementsRef = ref(db, "announcements");
+            const newAnnouncementRef = push(announcementsRef);
+            await set(newAnnouncementRef, {
+                title,
+                content,
+                createdAt: serverTimestamp()
+            });
+            toast({ title: "Success", description: "Announcement has been published." });
+            // Ideally reset form, but tricky with server actions.
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Error", description: e.message });
+        }
+    };
+    
+    const handleDelete = async (announcementId: string) => {
+        if (!db) return;
+        const announcementRef = ref(db, `announcements/${announcementId}`);
+        try {
+            await remove(announcementRef);
+            toast({ title: "Success", description: "Announcement deleted." });
+        } catch(e: any) {
+            toast({ variant: "destructive", title: "Error", description: e.message });
+        }
+    }
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="text-center">
-        <h1 className="text-3xl font-headline">AI Announcement Assistant</h1>
-        <p className="text-muted-foreground mt-2">Generate announcements for the website or your internal team.</p>
+        <h1 className="text-3xl font-headline">Manage Announcements</h1>
+        <p className="text-muted-foreground mt-2">Create and manage announcements for the main page.</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <Card>
-            <form action={formAction} ref={formRef}>
+            <form action={handlePublish}>
                 <CardHeader>
-                    <CardTitle>Create Announcement</CardTitle>
-                    <CardDescription>Enter a topic, choose an audience, and the AI will do the rest.</CardDescription>
+                    <CardTitle>New Announcement</CardTitle>
+                    <CardDescription>This will be displayed publicly on the website.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="topic">Topic</Label>
-                        <Textarea name="topic" id="topic" placeholder="e.g., New holiday pastries, special offer on coffee" required />
+                        <Label htmlFor="title">Title</Label>
+                        <Input name="title" id="title" placeholder="e.g., Cafe Closed for Holidays" required />
                     </div>
                      <div className="grid w-full items-center gap-1.5">
-                        <Label>Audience</Label>
-                        <RadioGroup defaultValue="website" name="audience" className="flex gap-4 mt-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="website" id="r1" />
-                                <Label htmlFor="r1">Website (Clients)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="team" id="r2" />
-                                <Label htmlFor="r2">Team</Label>
-                            </div>
-                        </RadioGroup>
+                        <Label htmlFor="content">Content</Label>
+                        <Textarea name="content" id="content" placeholder="Full details about the announcement..." required />
                     </div>
-                     {state?.error && <p className="text-sm font-medium text-destructive mt-2">{state.error}</p>}
                 </CardContent>
                 <CardFooter>
-                    <GenerateButton />
+                    <SubmitButton />
                 </CardFooter>
             </form>
         </Card>
 
-        <div className="space-y-8">
-            <Card className="flex flex-col">
-                <CardHeader>
-                    <CardTitle>Website Announcement</CardTitle>
-                    <CardDescription>Review and copy the text for the public website.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                    {state?.audience === 'website' && state.announcement ? (
-                    <div className="bg-muted p-4 rounded-md h-full whitespace-pre-wrap font-body text-sm">
-                        {state.announcement}
-                    </div>
-                    ) : (
-                    <div className="bg-muted p-4 rounded-md h-full whitespace-pre-wrap font-body text-sm text-muted-foreground">
-                        Your generated website announcement will appear here.
-                    </div>
-                    )}
-                </CardContent>
-                <CardFooter>
-                    <Button variant="secondary" onClick={() => state?.audience === 'website' && state.announcement && navigator.clipboard.writeText(state.announcement)}>
-                        Copy Text
-                    </Button>
-                </CardFooter>
-            </Card>
-
-            <Card className="flex flex-col">
-                <CardHeader>
-                    <CardTitle>Team Announcement</CardTitle>
-                    <CardDescription>Review and copy the text for your internal team.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                    <div className="bg-muted p-4 rounded-md h-full whitespace-pre-wrap font-body text-sm">
-                        {teamAnnouncement}
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="secondary" onClick={() => navigator.clipboard.writeText(teamAnnouncement)}>
-                        Copy Text
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Published Announcements</CardTitle>
+                <CardDescription>The most recent announcements are shown first.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading && <p>Loading...</p>}
+                <div className="space-y-4">
+                    {announcements.sort((a,b) => b.createdAt - a.createdAt).map(announcement => (
+                        <div key={announcement.id} className="border p-4 rounded-md relative">
+                           <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute top-2 right-2 h-7 w-7 text-destructive hover:text-destructive/90"
+                                onClick={() => handleDelete(announcement.id)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <h4 className="font-semibold">{announcement.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{announcement.content}</p>
+                            <p className="text-xs text-muted-foreground/80 mt-2">
+                                {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
+                            </p>
+                        </div>
+                    ))}
+                    {!loading && announcements.length === 0 && <p className="text-sm text-muted-foreground text-center">No announcements yet.</p>}
+                </div>
+            </CardContent>
+        </Card>
       </div>
     </div>
   );

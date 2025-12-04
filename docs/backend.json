@@ -70,6 +70,17 @@
             "volunteerId": { "type": "string" }
         },
         "required": ["itemId", "itemName", "quantity", "price", "timestamp"]
+    },
+    "announcement": {
+      "title": "Announcement",
+      "description": "A public announcement for the cafe.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "createdAt"]
     }
   },
   "auth": {
@@ -95,6 +106,10 @@
     "/sales/{saleId}": {
         "schema": { "$ref": "#/entities/sale" },
         "description": "Stores all sales transactions for analytics."
+    },
+    "/announcements/{announcementId}": {
+        "schema": { "$ref": "#/entities/announcement" },
+        "description": "Stores all public announcements."
     }
   }
 }

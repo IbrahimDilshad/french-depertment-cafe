@@ -51,3 +51,10 @@ export interface UserProfile {
   photoURL?: string;
   role: 'Admin' | 'Volunteer';
 }
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: any;
+}

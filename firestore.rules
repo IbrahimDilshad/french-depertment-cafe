@@ -16,6 +16,10 @@
     "sales": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
