@@ -4,7 +4,6 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getDatabase, ref, push, set, serverTimestamp } from "firebase/database";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { initializeServerApp } from "@/firebase/server-init";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
@@ -48,16 +47,31 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
   }
 
   const { firebaseApp } = initializeServerApp();
-  const storage = getStorage(firebaseApp);
   const database = getDatabase(firebaseApp);
 
   const { studentName, studentClass, cart, paymentScreenshot } = validatedFields.data;
 
   try {
-    // 1. Upload image to Firebase Storage
-    const fileRef = storageRef(storage, `payment_screenshots/${Date.now()}_${paymentScreenshot.name}`);
-    const snapshot = await uploadBytes(fileRef, paymentScreenshot);
-    const screenshotUrl = await getDownloadURL(snapshot.ref);
+    // 1. Upload image via our API endpoint to Google Drive
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', paymentScreenshot);
+
+    // We can't use a relative path for fetch on the server, we need the full URL.
+    // In production, NEXT_PUBLIC_URL should be set. For local, we assume localhost.
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:9002';
+    const uploadResponse = await fetch(`${baseUrl}/api/upload`, {
+        method: 'POST',
+        body: uploadFormData,
+    });
+    
+    if (!uploadResponse.ok) {
+        const errorBody = await uploadResponse.json();
+        throw new Error(errorBody.error || 'Upload to Google Drive failed.');
+    }
+
+    const uploadResult = await uploadResponse.json();
+    const screenshotUrl = uploadResult.url;
+
 
     // 2. Save order to Realtime Database
     const preOrdersRef = ref(database, "preOrders");
