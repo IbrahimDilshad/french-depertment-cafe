@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { useAuth, useCollection, useDatabase } from "@/firebase";
+import { useState, useEffect } from "react";
+import { useAuth, useCollection, useDatabase, useUser } from "@/firebase";
 import { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +46,8 @@ export default function TeamManagementPage() {
   const db = useDatabase();
   const auth = useAuth();
   const { toast } = useToast();
-  const { data: users, loading } = useCollection<UserProfile>("users");
+  const { user: authUser, loading: authLoading } = useUser();
+  const { data: users, loading: usersLoading } = useCollection<UserProfile>("users");
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,6 +58,41 @@ export default function TeamManagementPage() {
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<UserProfile['role']>('Volunteer');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  const loading = authLoading || usersLoading;
+
+  useEffect(() => {
+    // If the authenticated user is loaded and there are no users in the database,
+    // this must be the first user. Automatically make them an admin.
+    if (!loading && authUser && users.length === 0) {
+      if (!db) return;
+
+      const userProfileRef = ref(db, `users/${authUser.uid}`);
+      const newAdminProfile: Omit<UserProfile, 'id'> = {
+        displayName: authUser.displayName || "Admin",
+        email: authUser.email!,
+        photoURL: authUser.photoURL || '',
+        role: "Admin",
+      };
+
+      set(userProfileRef, newAdminProfile)
+        .then(() => {
+          toast({
+            title: "Admin Account Created",
+            description: "You have been automatically assigned the Admin role.",
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to create first admin profile:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not create initial admin account.",
+          });
+        });
+    }
+  }, [loading, authUser, users, db, toast]);
+
 
   const resetForm = () => {
     setEmail("");
