@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -13,12 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
-  LogOut,
 } from "lucide-react";
 import Logo from "@/components/logo";
-import { useAuth } from "@/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
@@ -30,14 +27,6 @@ const menuItems = [
 
 export default function VolunteerSidebar() {
   const pathname = usePathname();
-  const auth = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    if (!auth) return;
-    await signOut(auth);
-    router.push('/login');
-  };
 
   return (
     <Sidebar>
@@ -64,14 +53,6 @@ export default function VolunteerSidebar() {
         ))}
       </SidebarMenu>
       <SidebarFooter>
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
-                  <LogOut />
-                  <span>Logout</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );

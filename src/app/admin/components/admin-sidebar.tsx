@@ -20,15 +20,8 @@ import {
   Users,
   BarChart3,
   Megaphone,
-  LogOut,
-  Shield,
 } from "lucide-react";
 import Logo from "@/components/logo";
-import { useAuth, useDoc } from "@/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
-import { useUser } from "@/firebase";
-import { UserProfile } from "@/lib/types";
 
 const allMenuItems = [
   {
@@ -75,22 +68,11 @@ const allMenuItems = [
   },
 ];
 
-function AdminSidebarContent() {
+export default function AdminSidebar() {
   const pathname = usePathname();
-  const auth = useAuth();
-  const router = useRouter();
-  const { user } = useUser();
-
-  // Conditionally fetch the user profile only when the user object is available.
-  const { data: userProfile } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
-  const userRole = userProfile?.role;
+  // Assuming admin role for now to show all items
+  const userRole = "admin"; 
   
-  const handleLogout = async () => {
-    if (!auth) return;
-    await signOut(auth);
-    router.push('/login');
-  };
-
   const menuItems = allMenuItems.filter(item => userRole && item.roles.includes(userRole));
 
   return (
@@ -118,39 +100,7 @@ function AdminSidebarContent() {
         ))}
       </SidebarMenu>
       <SidebarFooter>
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
-                  <LogOut />
-                  <span>Logout</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
 }
-
-
-export default function AdminSidebar() {
-  const { user, loading } = useUser();
-
-  // We only render the sidebar content once we have a user,
-  // to prevent hooks from running with null dependencies.
-  if (loading || !user) {
-    // You can return a skeleton loader here if you want
-    return (
-       <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center justify-between">
-               <Logo className="text-sidebar-foreground" />
-               <SidebarTrigger/>
-            </div>
-        </SidebarHeader>
-       </Sidebar>
-    );
-  }
-
-  return <AdminSidebarContent />;
-}
-

@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu as MenuIcon, User } from 'lucide-react';
+import { Menu as MenuIcon } from 'lucide-react';
 import Logo from './logo';
 
 const routes = [
@@ -32,14 +32,6 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center ml-6">
-            <Button asChild>
-              <Link href="/login">
-                <User className="mr-2 h-4 w-4" /> Member Area
-              </Link>
-            </Button>
-          </div>
-
           <div className="md:hidden ml-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -64,13 +56,6 @@ export default function Header() {
                       </Link>
                     ))}
                   </nav>
-                  <div className="mt-auto px-4">
-                    <Button asChild className="w-full">
-                      <Link href="/login">
-                        <User className="mr-2 h-4 w-4" /> Member Area
-                      </Link>
-                    </Button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
