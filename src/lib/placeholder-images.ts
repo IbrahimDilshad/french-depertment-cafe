@@ -1,10 +1,4 @@
-import data from './placeholder-images.json';
 
-export type ImagePlaceholder = {
-  id: string;
-  description: string;
-  imageUrl: string;
-  imageHint: string;
-};
-
-export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;
+// This file is no longer in use and can be safely deleted.
+// Image management is now handled via the public/menu directory.
+export {};

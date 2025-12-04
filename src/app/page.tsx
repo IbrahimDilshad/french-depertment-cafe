@@ -10,9 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection } from '@/firebase';
 import { MenuItem, Announcement } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,10 +19,6 @@ import { Megaphone } from 'lucide-react';
 export default function Home() {
   const { data: menuItems, loading: menuLoading } = useCollection<MenuItem>('menuItems');
   const { data: announcements, loading: announcementsLoading } = useCollection<Announcement>('announcements');
-
-  const getImage = (id: string) => {
-    return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
-  };
 
   const loading = menuLoading || announcementsLoading;
   
@@ -37,7 +31,7 @@ export default function Home() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       
       {latestAnnouncement && (
-        <div className="mb-12 bg-muted/50 border border-border p-6 rounded-xl shadow-sm">
+         <div className="mb-12 bg-muted/50 border border-border p-6 rounded-xl shadow-sm">
             <div className="flex items-start gap-4">
                 <Megaphone className="h-6 w-6 text-primary mt-1" />
                 <div className="flex-1">
@@ -73,18 +67,16 @@ export default function Home() {
             </Card>
         ))}
         {dailyMenuItems.map((item) => {
-          const image = getImage(item.imageId);
           return (
             <Card key={item.id} className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-xl">
               <CardHeader className="p-0">
                 <div className="relative w-full h-48">
                   <Image
-                    src={image.imageUrl}
+                    src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/600x400/E2E8F0/A0AEC0?text=Image"}
                     alt={item.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
-                    data-ai-hint={image.imageHint}
                   />
                   {item.availability === 'Sold Out' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">

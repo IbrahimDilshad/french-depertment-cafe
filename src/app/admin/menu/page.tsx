@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import ImagePicker from "./components/image-picker";
 
 const defaultItemState: Partial<MenuItem> = {
     name: '',
@@ -47,7 +48,7 @@ const defaultItemState: Partial<MenuItem> = {
     price: 0,
     stock: 0,
     availability: 'In Stock',
-    imageId: 'croissant',
+    imageId: '',
     isPreOrderOnly: false,
 };
 
@@ -94,6 +95,11 @@ export default function MenuManagementPage() {
         toast({ variant: "destructive", title: "Error", description: "Item name is required." });
         return;
     }
+    if (!currentItem.imageId) {
+        toast({ variant: "destructive", title: "Error", description: "Please select an image for the item." });
+        return;
+    }
+
 
     try {
       if (isEditMode && currentItem.id) {
@@ -143,11 +149,11 @@ export default function MenuManagementPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>{isEditMode ? 'Edit' : 'Add New'} Menu Item</DialogTitle>
               <DialogDescription>
-                Fill in the details for the menu item.
+                Fill in the details for the menu item and select an image.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -186,6 +192,13 @@ export default function MenuManagementPage() {
                     checked={!!currentItem.isPreOrderOnly}
                     onCheckedChange={(checked) => setCurrentItem({...currentItem, isPreOrderOnly: checked})}
                  />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label>Item Image</Label>
+                <ImagePicker 
+                    selectedImage={currentItem.imageId}
+                    onSelectImage={(imageId) => setCurrentItem({ ...currentItem, imageId })}
+                />
               </div>
             </div>
             <DialogFooter>

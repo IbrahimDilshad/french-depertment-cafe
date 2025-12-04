@@ -4,7 +4,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +14,6 @@ import { MenuItem } from "@/lib/types";
 export default function CartPage() {
     const { cartItems, totalCost, removeFromCart, addToCart, updateQuantity } = useCart();
     const { toast } = useToast();
-
-    const getImage = (id: string) => {
-        return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
-    };
 
     const handleQuantityChange = (item: MenuItem, value: string) => {
         const quantity = Number(value);
@@ -59,11 +54,10 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2 space-y-4">
                     {cartItems.map(item => {
-                         const image = getImage(item.imageId);
                          return (
                             <Card key={item.id} className="flex items-center p-4">
                                 <Image
-                                    src={image.imageUrl}
+                                    src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/100x100/E2E8F0/A0AEC0?text=Image"}
                                     alt={item.name}
                                     width={100}
                                     height={100}

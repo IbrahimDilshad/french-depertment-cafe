@@ -4,7 +4,6 @@
 import Image from "next/image";
 import { useCollection } from "@/firebase";
 import { MenuItem } from "@/lib/types";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/cart-context";
 
@@ -31,10 +30,6 @@ export default function PreOrderPage() {
   const { toast } = useToast();
   const { cart, addToCart, removeFromCart } = useCart();
   
-  const getImage = (id: string) => {
-    return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
-  };
-
   const handleAddToCart = (item: MenuItem) => {
     const currentQuantity = cart[item.id] || 0;
     if (currentQuantity < item.stock) {
@@ -83,7 +78,6 @@ export default function PreOrderPage() {
       ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
               {availableItems.map((item) => {
-              const image = getImage(item.imageId);
               const currentQuantity = cart[item.id] || 0;
               const stockLimitReached = currentQuantity >= item.stock;
 
@@ -91,12 +85,11 @@ export default function PreOrderPage() {
                   <Card key={item.id} className="flex flex-col">
                       <CardHeader className="p-0 relative">
                           <Image
-                              src={image.imageUrl}
+                              src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/300x200/E2E8F0/A0AEC0?text=Image"}
                               alt={item.name}
                               width={300}
                               height={200}
                               className="object-cover w-full h-40 rounded-t-lg"
-                              data-ai-hint={image.imageHint}
                           />
                           <Badge variant="secondary" className="absolute top-2 right-2">{item.stock} in stock</Badge>
                       </CardHeader>
@@ -130,4 +123,3 @@ export default function PreOrderPage() {
     </div>
   );
 }
-
