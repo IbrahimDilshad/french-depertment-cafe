@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/firebase";
+import { useAuth, useDoc } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,18 +19,23 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogIn } from "lucide-react";
 import Logo from "@/components/logo";
+import { UserProfile } from "@/lib/types";
+import { get, ref } from "firebase/database";
+import { useDatabase } from "@/firebase/provider";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
+  const db = useDatabase();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
+    if (!auth || !db) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -40,12 +45,39 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: "Success",
-        description: "Logged in successfully. Redirecting...",
-      });
-      router.push("/admin");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // After successful login, fetch the user's role from Realtime Database
+      const userProfileRef = ref(db, `users/${user.uid}`);
+      const userProfileSnap = await get(userProfileRef);
+
+      if (userProfileSnap.exists()) {
+        const userProfile = userProfileSnap.val() as UserProfile;
+        toast({
+          title: "Success",
+          description: "Logged in successfully. Redirecting...",
+        });
+        
+        // Redirect based on role
+        if (userProfile.role === 'Admin') {
+          router.push("/admin");
+        } else if (userProfile.role === 'Volunteer') {
+          router.push("/volunteer");
+        } else {
+          // Fallback if role is not set or unexpected value
+          router.push("/login");
+        }
+      } else {
+        // This case might happen if the DB entry wasn't created
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "User profile not found. Please contact an admin.",
+        });
+        await auth.signOut();
+      }
+
     } catch (error: any) {
       toast({
         variant: "destructive",

@@ -9,17 +9,18 @@
       }
     },
     "menuItems": {
+      // Authenticated users can read, only admins can write
       ".read": "auth != null",
-      // Only Admins can edit the menu
       ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'Admin'"
     },
     "preOrders": {
-      // Any authenticated user can read (for placing orders)
+      // Any authenticated user can read for placing/viewing orders
       ".read": "auth != null",
-      // Only Admins can manage pre-orders
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'Admin' || !data.exists())"
+      // Anyone can create an order, but only admins can update status.
+      ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() == 'Admin')"
     },
     "sales": {
+      // Any authenticated user can read or write sales data.
       ".read": "auth != null",
       ".write": "auth != null"
     }

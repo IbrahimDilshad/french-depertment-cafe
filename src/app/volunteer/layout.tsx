@@ -22,14 +22,15 @@ export default function VolunteerLayout({
 
   useEffect(() => {
     if (!loading) {
-      // If loading is complete and there is no user, or user is not an Admin/Volunteer, redirect.
+      // If loading is complete and there is no user, or user does not have a valid role, redirect.
       if (!user || !userProfile || (userProfile.role !== 'Admin' && userProfile.role !== 'Volunteer')) {
         router.push("/login");
       }
     }
   }, [user, userProfile, loading, router]);
 
-  if (loading || !userProfile) {
+  // While loading auth status or profile, show a spinner.
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -37,23 +38,19 @@ export default function VolunteerLayout({
     );
   }
   
-  // A special case: if an Admin visits a volunteer page, redirect them to the main admin dashboard.
-  // This prevents confusion. Volunteers stay in the volunteer section.
-   if (userProfile.role === 'Admin') {
-     router.push('/admin');
-     return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-            <p>Redirecting to admin dashboard...</p>
-            <Loader2 className="h-8 w-8 animate-spin text-primary ml-4" />
-        </div>
-     );
-   }
+  // If user is not logged in or does not have a valid profile/role, show nothing (will be redirected).
+  if (!user || !userProfile || (userProfile.role !== 'Admin' && userProfile.role !== 'Volunteer')) {
+      return null;
+  }
+  
+   // Admins have access to everything. If they navigate to the volunteer section, just let them.
+   // Volunteers are restricted to the volunteer section.
 
   return (
     <SidebarProvider>
       <VolunteerSidebar />
       <SidebarInset>
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
