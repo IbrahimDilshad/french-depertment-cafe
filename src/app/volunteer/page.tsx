@@ -14,21 +14,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Bell } from 'lucide-react';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useDatabase, useUser } from '@/firebase';
 import { MenuItem, Sale } from '@/lib/types';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
+import { ref, set, push, update, increment, serverTimestamp } from "firebase/database";
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function VolunteerDashboard() {
   const { toast } = useToast();
-  const firestore = useFirestore();
+  const db = useDatabase();
   const { user } = useUser();
   const { data: menuItems, loading } = useCollection<MenuItem>("menuItems");
   
   const [sales, setSales] = useState<Record<string, number>>({});
 
   const handleSale = async (item: MenuItem) => {
-    if (!firestore || !user) {
+    if (!db || !user) {
         toast({ variant: 'destructive', title: "Error", description: `You must be logged in to record a sale.` });
         return;
     };
@@ -38,7 +38,7 @@ export default function VolunteerDashboard() {
       return;
     }
     
-    const saleData: Omit<Sale, 'id' | 'timestamp'> & { timestamp: any } = {
+    const saleData: Omit<Sale, 'id' | 'timestamp'> & { timestamp: object } = {
         itemId: item.id,
         itemName: item.name,
         quantity: 1,
@@ -49,12 +49,13 @@ export default function VolunteerDashboard() {
 
     try {
         // Record the sale
-        const salesRef = collection(firestore, 'sales');
-        await addDoc(salesRef, saleData);
+        const salesRef = ref(db, 'sales');
+        const newSaleRef = push(salesRef);
+        await set(newSaleRef, saleData);
 
         // Decrement stock
-        const itemRef = doc(firestore, `menuItems/${item.id}`);
-        await updateDoc(itemRef, { stock: increment(-1) });
+        const itemRef = ref(db, `menuItems/${item.id}`);
+        await update(itemRef, { stock: increment(-1) });
 
         setSales(prev => ({...prev, [item.id]: (prev[item.id] || 0) + 1}));
         toast({ title: "Sale Recorded", description: `One sale of ${item.name} recorded.` });

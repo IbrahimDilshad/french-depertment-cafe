@@ -2,31 +2,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, Query, DocumentData } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { getDatabase, ref, onValue, Database } from "firebase/database";
+import { useFirebaseApp } from "@/firebase";
 
+// This hook is for REALTIME DATABASE, despite the folder name.
 export function useCollection<T>(path: string) {
-  const firestore = useFirestore();
+  const app = useFirebaseApp();
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!firestore) {
+    if (!app) {
       return;
     }
 
+    const db = getDatabase(app);
+    const dbRef = ref(db, path);
     setLoading(true);
-    const collectionRef = collection(firestore, path);
 
-    const unsubscribe = onSnapshot(
-      collectionRef,
+    const unsubscribe = onValue(
+      dbRef,
       (snapshot) => {
-        const documents = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as T[];
-        setData(documents);
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          // Transform the object of objects into an array of objects,
+          // with the key included as the 'id' field.
+          const documents = Object.keys(val).map((key) => ({
+            id: key,
+            ...val[key],
+          })) as T[];
+          setData(documents);
+        } else {
+          setData([]); // Handle case where collection is empty
+        }
         setLoading(false);
         setError(null);
       },
@@ -39,7 +48,7 @@ export function useCollection<T>(path: string) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, path]);
+  }, [app, path]);
 
   return { data, loading, error };
 }

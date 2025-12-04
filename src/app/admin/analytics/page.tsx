@@ -13,7 +13,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { useCollection } from "@/firebase";
 import { Sale, PreOrder } from "@/lib/types";
-import { format, subDays } from "date-fns";
+import { format, subDays, fromUnixTime } from "date-fns";
 
 const chartConfig = {
   revenue: {
@@ -47,8 +47,9 @@ export default function AnalyticsPage() {
     }
 
     sales.forEach(sale => {
+        // Firebase RTDB server timestamp is in milliseconds since epoch
         if (sale.timestamp) {
-            const saleDate = format(new Date(sale.timestamp.seconds * 1000), "EEE");
+            const saleDate = format(new Date(sale.timestamp), "EEE");
             if (saleDate in revenueByDay) {
                 revenueByDay[saleDate] += sale.price * sale.quantity;
             }

@@ -32,9 +32,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useDatabase } from "@/firebase";
 import { MenuItem } from "@/lib/types";
-import { collection, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { ref, set, push, remove } from "firebase/database";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +52,7 @@ const defaultItemState: Partial<MenuItem> = {
 };
 
 export default function MenuManagementPage() {
-  const firestore = useFirestore();
+  const db = useDatabase();
   const { toast } = useToast();
   const { data: menuItems, loading, error } = useCollection<MenuItem>("menuItems");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -86,8 +86,8 @@ export default function MenuManagementPage() {
   }
 
   const handleSave = async () => {
-    if (!firestore) {
-       toast({ variant: "destructive", title: "Error", description: "Firestore is not properly initialized. Please refresh and try again." });
+    if (!db) {
+       toast({ variant: "destructive", title: "Error", description: "Database is not properly initialized. Please refresh and try again." });
        return;
     }
     if (!currentItem || !currentItem.name) {
@@ -98,31 +98,32 @@ export default function MenuManagementPage() {
     try {
       if (isEditMode && currentItem.id) {
         const { id, ...itemToUpdate } = currentItem;
-        const itemRef = doc(firestore, `menuItems/${id}`);
-        await updateDoc(itemRef, itemToUpdate);
+        const itemRef = ref(db, `menuItems/${id}`);
+        await set(itemRef, itemToUpdate);
         toast({ title: "Success", description: "Menu item updated." });
       } else {
         const { id, ...newItem } = currentItem; // remove id before adding
-        const collectionRef = collection(firestore, "menuItems");
-        await addDoc(collectionRef, newItem);
+        const collectionRef = ref(db, "menuItems");
+        const newItemRef = push(collectionRef);
+        await set(newItemRef, newItem);
         toast({ title: "Success", description: "New menu item added." });
       }
       handleDialogClose();
     } catch (e: any) {
-        console.error("Firestore write error:", e);
+        console.error("Database write error:", e);
         toast({ 
             variant: "destructive", 
             title: "Error saving item", 
-            description: e.message || "An unknown error occurred. Check the console and Firestore rules."
+            description: e.message || "An unknown error occurred. Check the console and database rules."
         });
     }
   };
 
   const handleDelete = async () => {
-    if (!firestore || !itemToDelete) return;
+    if (!db || !itemToDelete) return;
     try {
-        const itemRef = doc(firestore, `menuItems/${itemToDelete.id}`);
-        await deleteDoc(itemRef);
+        const itemRef = ref(db, `menuItems/${itemToDelete.id}`);
+        await remove(itemRef);
         toast({ title: "Success", description: `${itemToDelete.name} has been deleted.`})
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: `Could not delete item: ${e.message}`})

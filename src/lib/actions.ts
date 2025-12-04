@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getDatabase, ref, push, set, serverTimestamp } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { initializeServerApp } from "@/firebase/server-init";
 
@@ -49,7 +49,7 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
 
   const { firebaseApp } = initializeServerApp();
   const storage = getStorage(firebaseApp);
-  const firestore = getFirestore(firebaseApp);
+  const database = getDatabase(firebaseApp);
 
   const { studentName, studentClass, cart, paymentScreenshot } = validatedFields.data;
 
@@ -59,10 +59,11 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
     const snapshot = await uploadBytes(fileRef, paymentScreenshot);
     const screenshotUrl = await getDownloadURL(snapshot.ref);
 
-    // 2. Save order to Firestore
-    const preOrdersCollection = collection(firestore, "preOrders");
+    // 2. Save order to Realtime Database
+    const preOrdersRef = ref(database, "preOrders");
+    const newOrderRef = push(preOrdersRef);
     
-    await addDoc(preOrdersCollection, {
+    await set(newOrderRef, {
         studentName,
         studentClass,
         items: JSON.parse(cart), // cart is a stringified object

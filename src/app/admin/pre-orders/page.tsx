@@ -12,23 +12,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useDatabase } from "@/firebase";
 import { PreOrder } from "@/lib/types";
-import { doc, updateDoc } from "firebase/firestore";
+import { ref, update } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 export default function PreOrdersPage() {
   const { data: preOrders, loading } = useCollection<PreOrder>("preOrders");
-  const firestore = useFirestore();
+  const db = useDatabase();
   const { toast } = useToast();
 
   const handleStatusChange = async (orderId: string, newStatus: PreOrder['status']) => {
-    if (!firestore) return;
-    const orderRef = doc(firestore, 'preOrders', orderId);
+    if (!db) return;
+    const orderRef = ref(db, `preOrders/${orderId}`);
     try {
-        await updateDoc(orderRef, { status: newStatus });
+        await update(orderRef, { status: newStatus });
         toast({ title: 'Success', description: `Order status updated to ${newStatus}` });
     } catch(e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -36,7 +36,9 @@ export default function PreOrdersPage() {
   }
 
   const getOrderItemsText = (items: Record<string, number>) => {
-    return Object.entries(items).map(([itemId, quantity]) => `${quantity}x ${itemId.replace(/([A-Z])/g, ' $1')}`).join(', ');
+    // This is a placeholder as we don't have item names readily available here without another fetch
+    // A more robust solution would be to store item names in the order or fetch them.
+    return Object.entries(items).map(([itemId, quantity]) => `${quantity}x Item`).join(', ');
   }
 
   return (

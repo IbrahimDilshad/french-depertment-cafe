@@ -4,12 +4,15 @@
 import { createContext, useContext, ReactNode } from "react";
 import type { FirebaseApp } from "firebase/app";
 import type { Auth } from "firebase/auth";
+import type { Database } from "firebase/database";
 import type { Firestore } from "firebase/firestore";
+
 
 export interface FirebaseProviderProps {
   firebaseApp: FirebaseApp;
   auth: Auth;
-  firestore: Firestore;
+  database: Database;
+  firestore: Firestore; // For backwards compatibility with the hook name
   children?: ReactNode;
 }
 
@@ -20,10 +23,11 @@ const FirebaseContext = createContext<FirebaseProviderProps | undefined>(
 export function FirebaseProvider({
   firebaseApp,
   auth,
+  database,
   firestore,
   children,
 }: FirebaseProviderProps) {
-  const value = { firebaseApp, auth, firestore };
+  const value = { firebaseApp, auth, database, firestore };
   return (
     <FirebaseContext.Provider value={value}>
       {children}
@@ -41,7 +45,8 @@ export const useFirebase = () => {
 
 export const useFirebaseApp = () => useFirebase().firebaseApp;
 export const useAuth = () => useFirebase().auth;
-export const useFirestore = () => useFirebase().firestore;
-export const useDatabase = () => {
-  throw new Error("Realtime Database is not configured for this project. Use useFirestore() instead.");
-}
+export const useDatabase = () => useFirebase().database;
+
+// This hook name is misleading, it returns the Realtime Database instance.
+// This is kept for now to prevent breaking existing components.
+export const useFirestore = () => useFirebase().database as any;

@@ -19,8 +19,9 @@ export default function AdminDashboard() {
 
   const { totalRevenue, salesToday, newPreOrders } = useMemo(() => {
     const totalRevenue = sales.reduce((acc, sale) => acc + sale.price * sale.quantity, 0);
-
-    const salesToday = sales.filter(sale => sale.timestamp && isToday(new Date(sale.timestamp.seconds * 1000))).length;
+    
+    // RTDB timestamp is in milliseconds
+    const salesToday = sales.filter(sale => sale.timestamp && isToday(new Date(sale.timestamp))).length;
     
     const newPreOrders = preOrders.filter(order => order.status === 'Pending').length;
 

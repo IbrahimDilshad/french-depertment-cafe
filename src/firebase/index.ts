@@ -3,7 +3,7 @@
 
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getDatabase, type Database } from "firebase/database";
 import { firebaseConfig } from "./config";
 
 import { FirebaseClientProvider } from "./client-provider";
@@ -11,16 +11,18 @@ import {
   FirebaseProvider,
   useFirebase,
   useFirebaseApp,
-  useFirestore,
+  useFirestore, // This will be deprecated/renamed
   useAuth,
+  useDatabase,
 } from "./provider";
 import { useUser } from "./auth/use-user";
 import { useCollection } from "./firestore/use-collection";
 import { useDoc } from "./firestore/use-doc";
 
+
 let firebaseApp: FirebaseApp | undefined;
 let auth: Auth | undefined;
-let firestore: Firestore | undefined;
+let database: Database | undefined;
 
 function initializeFirebase() {
   if (!firebaseApp) {
@@ -30,10 +32,10 @@ function initializeFirebase() {
       firebaseApp = getApps()[0];
     }
     auth = getAuth(firebaseApp);
-    firestore = getFirestore(firebaseApp);
+    database = getDatabase(firebaseApp);
   }
   
-  return { firebaseApp, auth, firestore };
+  return { firebaseApp, auth, database };
 }
 
 export {
@@ -45,6 +47,7 @@ export {
   useDoc,
   useFirebase,
   useFirebaseApp,
-  useFirestore,
+  useFirestore, // Keep for now to avoid breaking changes, but it's using RTDB
   useAuth,
+  useDatabase,
 };

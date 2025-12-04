@@ -2,30 +2,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { useFirebaseApp } from "@/firebase";
 
+// This hook is for REALTIME DATABASE, despite the folder name.
 export function useDoc<T>(path: string | null) {
-  const firestore = useFirestore();
+  const app = useFirebaseApp();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!firestore || !path) {
+    if (!app || !path) {
       setLoading(false);
       setData(null);
       return;
     }
 
+    const db = getDatabase(app);
+    const docRef = ref(db, path);
     setLoading(true);
-    const docRef = doc(firestore, path);
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = onValue(
       docRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          setData({ id: snapshot.id, ...snapshot.data() } as T);
+           // The key is the last part of the path
+          const id = snapshot.key;
+          setData({ id, ...snapshot.val() } as T);
         } else {
           setData(null);
         }
@@ -40,7 +44,7 @@ export function useDoc<T>(path: string | null) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, path]);
+  }, [app, path]);
 
   return { data, loading, error };
 }
