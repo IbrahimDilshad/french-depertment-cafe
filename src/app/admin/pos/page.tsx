@@ -33,19 +33,19 @@ export default function PointOfSalePage() {
   const totalCost = Object.values(cart).reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   const addToCart = (item: MenuItem) => {
-    setCart(prevCart => {
-      const existingItem = prevCart[item.id];
-      const newQuantity = (existingItem?.quantity || 0) + 1;
+    const existingItem = cart[item.id];
+    const newQuantity = (existingItem?.quantity || 0) + 1;
 
-      if (newQuantity > item.stock) {
-        toast({
-          variant: 'destructive',
-          title: "Stock limit reached",
-          description: `Only ${item.stock} of ${item.name} available.`
-        });
-        return prevCart;
-      }
-      
+    if (newQuantity > item.stock) {
+      toast({
+        variant: 'destructive',
+        title: "Stock limit reached",
+        description: `Only ${item.stock} of ${item.name} available.`
+      });
+      return;
+    }
+    
+    setCart(prevCart => {
       const newCart = { ...prevCart };
       newCart[item.id] = { ...item, quantity: newQuantity };
       return newCart;
