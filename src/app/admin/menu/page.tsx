@@ -61,12 +61,20 @@ export default function MenuManagementPage() {
   };
 
   const handleSave = async () => {
-    if (!firestore || !currentItem) return;
+    if (!firestore || !currentItem) {
+       toast({ variant: "destructive", title: "Error", description: "Firestore not available. Please try again later." });
+       return;
+    }
+    if (!currentItem.name) {
+        toast({ variant: "destructive", title: "Error", description: "Item name is required." });
+        return;
+    }
 
     try {
       if (isEditMode && currentItem.id) {
-        const itemRef = doc(firestore, "menuItems", currentItem.id);
-        await updateDoc(itemRef, currentItem);
+        const { id, ...itemToUpdate } = currentItem;
+        const itemRef = doc(firestore, "menuItems", id);
+        await updateDoc(itemRef, itemToUpdate);
         toast({ title: "Success", description: "Menu item updated." });
       } else {
         const { id, ...newItem } = currentItem; // remove id before adding
@@ -76,7 +84,8 @@ export default function MenuManagementPage() {
       setIsDialogOpen(false);
       setCurrentItem(null);
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e.message });
+      console.error("Firestore save error:", e);
+      toast({ variant: "destructive", title: "Error saving item", description: e.message });
     }
   };
 

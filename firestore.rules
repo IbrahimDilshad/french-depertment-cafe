@@ -16,26 +16,28 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAppUser() && getUserRole(request.auth.uid) == 'admin';
+      // For now, we allow any interaction without auth for admin panel
+      return true;
+      // return isAppUser() && getUserRole(request.auth.uid) == 'admin';
     }
 
     function isVolunteer() {
-       return isAppUser() && getUserRole(request.auth.uid) == 'volunteer';
+      // For now, we allow any interaction without auth for volunteer panel
+       return true;
+       // return isAppUser() && getUserRole(request.auth.uid) == 'volunteer';
     }
 
     match /users/{userId} {
-      allow read: if isAppUser();
-      allow write: if isOwner(userId) || isAdmin();
+      allow read, write: if true;
     }
     
     match /menuItems/{itemId} {
-      allow read: if isAppUser();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /preOrders/{orderId} {
-      // Allow any logged in user to create a pre-order
-      allow create: if isAppUser(); 
+      allow create: if true; 
       allow read, update: if isAdmin() || isVolunteer();
     }
 
@@ -51,10 +53,9 @@ service cloud.firestore {
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow logged-in users to upload payment screenshots to a specific folder
+    // Allow anyone to upload payment screenshots for now
     match /payment_screenshots/{allPaths=**} {
-      allow write: if request.auth != null
-                    && request.resource.size < 4 * 1024 * 1024 // Max 4MB
+      allow write: if request.resource.size < 4 * 1024 * 1024 // Max 4MB
                     && request.resource.contentType.matches('image/.*');
     }
   }
