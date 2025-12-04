@@ -16,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +29,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 
 export default function MenuManagementPage() {
@@ -48,7 +48,8 @@ export default function MenuManagementPage() {
         price: 0,
         stock: 0,
         availability: 'In Stock',
-        imageId: 'croissant'
+        imageId: 'croissant',
+        isPreOrderOnly: false,
     });
     setIsDialogOpen(true);
   };
@@ -68,7 +69,8 @@ export default function MenuManagementPage() {
         await updateDoc(itemRef, currentItem);
         toast({ title: "Success", description: "Menu item updated." });
       } else {
-        await addDoc(collection(firestore, "menuItems"), currentItem);
+        const { id, ...newItem } = currentItem; // remove id before adding
+        await addDoc(collection(firestore, "menuItems"), newItem);
         toast({ title: "Success", description: "New menu item added." });
       }
       setIsDialogOpen(false);
@@ -124,6 +126,14 @@ export default function MenuManagementPage() {
                     </SelectContent>
                 </Select>
               </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="pre-order-only" className="text-right">Pre-order Only</Label>
+                <Switch 
+                    id="pre-order-only"
+                    checked={currentItem?.isPreOrderOnly}
+                    onCheckedChange={(checked) => setCurrentItem({...currentItem, isPreOrderOnly: checked})}
+                 />
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={handleSave}>Save changes</Button>
@@ -139,12 +149,13 @@ export default function MenuManagementPage() {
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading && <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>}
-            {error && <TableRow><TableCell colSpan={5} className="text-center text-destructive">{error.message}</TableCell></TableRow>}
+            {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+            {error && <TableRow><TableCell colSpan={6} className="text-center text-destructive">{error.message}</TableCell></TableRow>}
             {!loading && menuItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
@@ -155,6 +166,11 @@ export default function MenuManagementPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>{item.stock}</TableCell>
+                <TableCell>
+                    <Badge variant={item.isPreOrderOnly ? 'outline' : 'default'}>
+                        {item.isPreOrderOnly ? 'Pre-order' : 'Daily'}
+                    </Badge>
+                </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => openEditItemDialog(item)}>Edit</Button>
                 </TableCell>

@@ -38,7 +38,8 @@
         "price": { "type": "number" },
         "availability": { "type": "string", "enum": ["In Stock", "Sold Out"] },
         "stock": { "type": "number" },
-        "imageId": { "type": "string" }
+        "imageId": { "type": "string" },
+        "isPreOrderOnly": { "type": "boolean", "description": "If true, the item is only available for pre-order." }
       },
       "required": ["name", "price", "availability", "stock"]
     },

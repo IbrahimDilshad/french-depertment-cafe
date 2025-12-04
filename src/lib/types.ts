@@ -6,6 +6,7 @@ export interface MenuItem {
   availability: 'In Stock' | 'Sold Out';
   stock: number;
   imageId: string;
+  isPreOrderOnly?: boolean;
 }
 
 export interface PreOrder {
@@ -27,7 +28,7 @@ export interface Sale {
   itemName: string;
   quantity: number;
   price: number;
-  timestamp: Date;
+  timestamp: any;
   volunteerId: string;
 }
 

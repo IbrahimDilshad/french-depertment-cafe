@@ -23,6 +23,8 @@ export default function Home() {
     return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
   };
 
+  const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly);
+
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="text-center mb-12">
@@ -49,7 +51,7 @@ export default function Home() {
                 </CardFooter>
             </Card>
         ))}
-        {menuItems.map((item) => {
+        {dailyMenuItems.map((item) => {
           const image = getImage(item.imageId);
           return (
             <Card key={item.id} className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-xl">
