@@ -26,7 +26,7 @@ export async function uploadFileToDrive(file) {
     const uploaded = await drive.files.create({
       requestBody: {
         name: file.name,
-        // The folder ID for "LeFrenchCafe-Screenshots"
+        // The folder ID for "LeFrenchCafe-Screenshots" in the Shared Drive
         parents: ["1ZwZbhi5jlRNarBZIW3nCeM5a-_dN-gPl"], 
       },
       media: {
