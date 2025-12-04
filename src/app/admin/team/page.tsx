@@ -40,13 +40,16 @@ export default function TeamManagementPage() {
   const db = useDatabase();
   const auth = useAuth();
   const { toast } = useToast();
-  const { data: users, loading } = useCollection<UserProfile>("users");
+  // We will re-enable user listing after the first admin is created.
+  // const { data: users, loading } = useCollection<UserProfile>("users");
+  const users: UserProfile[] = [];
+  const loading = false;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<"admin" | "volunteer">("volunteer");
+  const [role, setRole] = useState<"admin" | "volunteer">("admin");
 
   const handleAddTeamMember = async () => {
     if (!auth || !db) {
@@ -59,10 +62,6 @@ export default function TeamManagementPage() {
     }
 
     try {
-      // In a real production app, it's safer to handle user creation on a server/Cloud Function
-      // to avoid exposing auth service instances to client-side admins.
-      // This also avoids the need for the admin to re-authenticate if their token is expired.
-      // For this prototype, we'll create the user on the client.
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -101,7 +100,7 @@ export default function TeamManagementPage() {
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
               <DialogDescription>
-                Enter the details for the new team member. They will be invited to set their own password.
+                Create the first administrator account for your application.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -124,8 +123,8 @@ export default function TeamManagementPage() {
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="volunteer">Volunteer</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -159,7 +158,7 @@ export default function TeamManagementPage() {
                 </TableCell>
               </TableRow>
             ))}
-             {!loading && users.length === 0 && <TableRow><TableCell colSpan={4} className="text-center">No team members found.</TableCell></TableRow>}
+             {!loading && users.length === 0 && <TableRow><TableCell colSpan={4} className="text-center">No team members found. Add your first admin!</TableCell></TableRow>}
           </TableBody>
         </Table>
       </div>
