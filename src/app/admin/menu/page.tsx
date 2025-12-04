@@ -64,7 +64,6 @@ export default function MenuManagementPage() {
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    // Reset to default state instead of null after a short delay
     setTimeout(() => {
         setCurrentItem(defaultItemState);
     }, 150);

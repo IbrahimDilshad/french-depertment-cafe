@@ -1,3 +1,6 @@
+
+"use client";
+
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -15,17 +18,25 @@ import { useUser } from "./auth/use-user";
 import { useCollection } from "./firestore/use-collection";
 import { useDoc } from "./firestore/use-doc";
 
-let firebaseApp: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-
-function initializeFirebase() {
+// This function is memoized, so it will only run once.
+let firebaseApp: FirebaseApp | undefined;
+function getFirebaseApp() {
+  if (firebaseApp) {
+    return firebaseApp;
+  }
   if (getApps().length === 0) {
     firebaseApp = initializeApp(firebaseConfig);
-    auth = getAuth(firebaseApp);
-    firestore = getFirestore(firebaseApp);
+  } else {
+    firebaseApp = getApps()[0];
   }
-  return { firebaseApp, auth, firestore };
+  return firebaseApp;
+}
+
+function initializeFirebase() {
+  const app = getFirebaseApp();
+  const auth = getAuth(app);
+  const firestore = getFirestore(app);
+  return { firebaseApp: app, auth, firestore };
 }
 
 export {
