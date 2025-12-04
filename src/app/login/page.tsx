@@ -44,43 +44,15 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      toast({
+        title: "Success",
+        description: "Logged in successfully. Redirecting...",
+      });
 
-      // After successful login, fetch the user's role from Realtime Database
-      const userProfileRef = ref(db, `users/${user.uid}`);
-      const userProfileSnap = await get(userProfileRef);
-
-      if (userProfileSnap.exists()) {
-        const userProfile = userProfileSnap.val() as Omit<UserProfile, 'id'>;
-        toast({
-          title: "Success",
-          description: "Logged in successfully. Redirecting...",
-        });
-        
-        // Redirect based on role
-        if (userProfile.role === 'Admin') {
-          router.push("/admin");
-        } else if (userProfile.role === 'Volunteer') {
-          router.push("/volunteer");
-        } else {
-          // Fallback if role is not set or unexpected value
-           toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "You do not have a role assigned. Please contact an admin.",
-          });
-          await auth.signOut();
-        }
-      } else {
-        // This case means the user exists in Firebase Auth but has not been added to the team in the database.
-        toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "Your account has not been authorized. Please contact an administrator.",
-        });
-        await auth.signOut();
-      }
+      // Redirect directly to admin page to allow first-time setup
+      router.push("/admin");
 
     } catch (error: any) {
       let errorMessage = error.message;
