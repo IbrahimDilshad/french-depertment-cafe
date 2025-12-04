@@ -1,34 +1,7 @@
 
 {
   "rules": {
-    "users": {
-      // Admins can read the entire list of users for the team management page.
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'",
-      "$uid": {
-        // A specific user can only be written to by that same user or by an admin.
-        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')"
-      }
-    },
-    "menuItems": {
-      // Anyone can read the menu.
-      ".read": true,
-      // Only admins can write to menu items.
-      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'"
-    },
-    "preOrders": {
-      // Admins and volunteers can read all pre-orders.
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'volunteer')",
-      "$orderId": {
-        // Anyone can create a new pre-order.
-        // Admins and volunteers can update an existing one.
-        ".write": "!data.exists() || (auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'volunteer'))"
-      }
-    },
-    "sales": {
-       // Admins and volunteers can create sales.
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'volunteer')",
-       // Only admins and volunteers can read sales data.
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'volunteer')"
-    }
+    ".read": true,
+    ".write": true
   }
 }
