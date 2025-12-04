@@ -3,6 +3,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth, useUser, useDoc } from "@/firebase";
+import { UserProfile } from "@/lib/types";
 import {
   Sidebar,
   SidebarHeader,
@@ -28,50 +30,47 @@ const allMenuItems = [
     href: "/admin",
     label: "Dashboard",
     icon: LayoutDashboard,
-    roles: ["admin"],
   },
   {
     href: "/admin/analytics",
     label: "Analytics",
     icon: BarChart3,
-    roles: ["admin"],
   },
   {
     href: "/admin/menu",
     label: "Menu",
     icon: Coffee,
-    roles: ["admin"],
   },
   {
     href: "/admin/stock",
     label: "Stock",
     icon: Boxes,
-    roles: ["admin", "volunteer"],
   },
   {
     href: "/admin/pre-orders",
     label: "Pre-orders",
     icon: ShoppingCart,
-    roles: ["admin", "volunteer"],
   },
   {
     href: "/admin/team",
     label: "Team",
     icon: Users,
-    roles: ["admin"],
   },
   {
     href: "/admin/announcements",
     label: "Announcements",
     icon: Megaphone,
-    roles: ["admin"],
   },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  // Temporarily show all items for initial setup
-  const menuItems = allMenuItems;
+  const { user } = useUser();
+  const { data: userProfile, loading } = useDoc<UserProfile>(user ? `users/${user.uid}` : null);
+  
+  // Temporarily show all items for initial setup until a user is logged in
+  const menuItems = userProfile ? allMenuItems.filter(item => userProfile.accessiblePages?.includes(item.href)) : allMenuItems;
+
 
   return (
     <Sidebar>

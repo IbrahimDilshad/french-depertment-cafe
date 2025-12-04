@@ -20,13 +20,15 @@
           "format": "uri",
           "description": "URL of the user's profile picture."
         },
-        "role": {
-          "type": "string",
-          "description": "The user's role in the system.",
-          "enum": ["admin", "volunteer"]
+        "accessiblePages": {
+            "type": "array",
+            "description": "A list of page paths this user has access to.",
+            "items": {
+                "type": "string"
+            }
         }
       },
-      "required": ["displayName", "email", "role"]
+      "required": ["displayName", "email", "accessiblePages"]
     },
     "menuItem": {
       "title": "Menu Item",
@@ -73,7 +75,7 @@
     }
   },
   "auth": {
-    "providers": []
+    "providers": ["email"]
   },
   "firestore": {
     "/users/{userId}": {

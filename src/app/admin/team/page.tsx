@@ -24,17 +24,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
+
+const allAdminPages = [
+  { id: "/admin", label: "Dashboard" },
+  { id: "/admin/analytics", label: "Analytics" },
+  { id: "/admin/menu", label: "Menu" },
+  { id: "/admin/stock", label: "Stock" },
+  { id: "/admin/pre-orders", label: "Pre-orders" },
+  { id: "/admin/team", label: "Team" },
+  { id: "/admin/announcements", label: "Announcements" },
+];
 
 export default function TeamManagementPage() {
   const db = useDatabase();
@@ -49,7 +53,7 @@ export default function TeamManagementPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<"admin" | "volunteer">("admin");
+  const [accessiblePages, setAccessiblePages] = useState<string[]>([]);
 
   const handleAddTeamMember = async () => {
     if (!auth || !db) {
@@ -60,16 +64,20 @@ export default function TeamManagementPage() {
         toast({ variant: "destructive", title: "Error", description: "All fields are required." });
         return;
     }
+     if (accessiblePages.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Please select at least one accessible page." });
+        return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const newUserProfile: Omit<UserProfile, 'id'> = {
+      const newUserProfile: Omit<UserProfile, 'id' | 'role'> & { accessiblePages: string[] } = {
         displayName: displayName,
         email: user.email!,
-        role: role,
-        photoURL: ''
+        photoURL: '',
+        accessiblePages: accessiblePages,
       };
 
       await set(ref(db, `users/${user.uid}`), newUserProfile);
@@ -79,11 +87,17 @@ export default function TeamManagementPage() {
       setEmail("");
       setPassword("");
       setDisplayName("");
-      setRole("volunteer");
+      setAccessiblePages([]);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed to add member", description: error.message });
     }
   };
+
+  const handlePageAccessChange = (pageId: string) => {
+    setAccessiblePages(prev => 
+        prev.includes(pageId) ? prev.filter(p => p !== pageId) : [...prev, pageId]
+    );
+  }
 
 
   return (
@@ -96,11 +110,11 @@ export default function TeamManagementPage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Add Team Member
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
               <DialogDescription>
-                Create the first administrator account for your application.
+                Create an account and assign page permissions. For a super admin, select all pages.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -116,17 +130,20 @@ export default function TeamManagementPage() {
                 <Label htmlFor="password" className="text-right">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">Role</Label>
-                <Select value={role} onValueChange={(value: "admin" | "volunteer") => setRole(value)}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="volunteer">Volunteer</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="col-span-4 space-y-2">
+                <Label>Page Access</Label>
+                <div className="grid grid-cols-2 gap-2 rounded-md border p-2">
+                    {allAdminPages.map(page => (
+                        <div key={page.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                                id={page.id} 
+                                onCheckedChange={() => handlePageAccessChange(page.id)}
+                                checked={accessiblePages.includes(page.id)}
+                            />
+                            <Label htmlFor={page.id} className="text-sm font-normal">{page.label}</Label>
+                        </div>
+                    ))}
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -142,7 +159,7 @@ export default function TeamManagementPage() {
             <TableRow>
               <TableHead>Display Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Accessible Pages</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -152,7 +169,7 @@ export default function TeamManagementPage() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.displayName}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>{user.accessiblePages?.join(', ') || 'None'}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">Edit</Button>
                 </TableCell>
