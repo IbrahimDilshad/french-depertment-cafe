@@ -3,32 +3,34 @@
 
 import AdminSidebar from "./components/admin-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { useUser } from "@/firebase";
+import { useUser, useDoc } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { UserProfile } from "@/lib/types";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useUser();
+  const { user, loading: authLoading } = useUser();
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(user ? `users/${user.uid}`: null);
   const router = useRouter();
 
-  useEffect(() => {
-    // If loading is complete and there is still no user,
-    // redirect to the login page.
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
+  const loading = authLoading || profileLoading;
 
-  // While loading authentication status, or if there is no user,
-  // show a loading screen and prevent any content from rendering.
-  // This ensures no admin content is ever briefly visible to an
-  // unauthenticated user.
-  if (loading || !user) {
+  useEffect(() => {
+    if (!loading) {
+      // If loading is complete and there's no user, or the user is not an Admin, redirect
+      if (!user || !userProfile || userProfile.role !== "Admin") {
+        router.push("/login");
+      }
+    }
+  }, [user, userProfile, loading, router]);
+
+  // While loading or if user is not an admin, show loading screen
+  if (loading || !userProfile || userProfile.role !== "Admin") {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -36,7 +38,7 @@ export default function AdminLayout({
     );
   }
 
-  // Only if there is a logged-in user, render the admin panel.
+  // Only if there is a logged-in Admin user, render the admin panel.
   return (
     <SidebarProvider>
       <AdminSidebar />

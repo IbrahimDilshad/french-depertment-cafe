@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -48,5 +49,5 @@ export interface UserProfile {
   displayName: string;
   email: string;
   photoURL?: string;
-  accessiblePages: string[];
+  role: 'Admin' | 'Volunteer';
 }

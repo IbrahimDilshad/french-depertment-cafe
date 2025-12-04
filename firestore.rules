@@ -3,15 +3,21 @@
   "rules": {
     "users": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      "$uid": {
+         // Admins can write to any profile, users can only write to their own.
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'Admin' || auth.uid == $uid)"
+      }
     },
     "menuItems": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      // Only Admins can edit the menu
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'Admin'"
     },
     "preOrders": {
+      // Any authenticated user can read (for placing orders)
       ".read": "auth != null",
-      ".write": "auth != null"
+      // Only Admins can manage pre-orders
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'Admin' || !data.exists())"
     },
     "sales": {
       ".read": "auth != null",

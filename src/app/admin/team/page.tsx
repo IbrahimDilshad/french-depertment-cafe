@@ -20,7 +20,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -35,21 +34,13 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set, update, remove } from "firebase/database";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 
-const allAdminPages = [
-  { id: "/admin", label: "Dashboard" },
-  { id: "/admin/analytics", label: "Analytics" },
-  { id: "/admin/menu", label: "Menu" },
-  { id: "/admin/stock", label: "Stock" },
-  { id: "/admin/pre-orders", label: "Pre-orders" },
-  { id: "/admin/team", label: "Team" },
-  { id: "/admin/announcements", label: "Announcements" },
-];
 
 export default function TeamManagementPage() {
   const db = useDatabase();
@@ -64,14 +55,14 @@ export default function TeamManagementPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [accessiblePages, setAccessiblePages] = useState<string[]>([]);
+  const [role, setRole] = useState<UserProfile['role']>('Volunteer');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   const resetForm = () => {
     setEmail("");
     setPassword("");
     setDisplayName("");
-    setAccessiblePages([]);
+    setRole("Volunteer");
     setCurrentUser(null);
   };
   
@@ -89,10 +80,6 @@ export default function TeamManagementPage() {
         toast({ variant: "destructive", title: "Error", description: "All fields are required." });
         return;
     }
-     if (accessiblePages.length === 0) {
-        toast({ variant: "destructive", title: "Error", description: "Please select at least one accessible page." });
-        return;
-    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -102,7 +89,7 @@ export default function TeamManagementPage() {
         displayName: displayName,
         email: user.email!,
         photoURL: '',
-        accessiblePages: accessiblePages,
+        role: role,
       };
 
       await set(ref(db, `users/${user.uid}`), newUserProfile);
@@ -118,15 +105,15 @@ export default function TeamManagementPage() {
   const handleOpenEditDialog = (user: UserProfile) => {
     setCurrentUser(user);
     setDisplayName(user.displayName);
-    setAccessiblePages(user.accessiblePages || []);
+    setRole(user.role || 'Volunteer');
     setIsEditDialogOpen(true);
   }
 
   const handleUpdateTeamMember = async () => {
     if (!db || !currentUser) return;
 
-    if (!displayName || accessiblePages.length === 0) {
-        toast({ variant: "destructive", title: "Error", description: "Display name and at least one page access are required." });
+    if (!displayName) {
+        toast({ variant: "destructive", title: "Error", description: "Display name is required." });
         return;
     }
 
@@ -134,7 +121,7 @@ export default function TeamManagementPage() {
         const userRef = ref(db, `users/${currentUser.id}`);
         await update(userRef, {
             displayName,
-            accessiblePages
+            role
         });
 
         toast({ title: "Success", description: `${displayName}'s profile has been updated.`});
@@ -153,31 +140,18 @@ export default function TeamManagementPage() {
   const handleDeleteTeamMember = async () => {
     if (!db || !currentUser) return;
     try {
-        // Note: Deleting a user from the database does not delete them from Firebase Auth.
         // This is a simplified approach. A full implementation would require a Cloud Function
-        // to delete the auth user record.
+        // to delete the auth user record. We are just deleting the database record.
         const userRef = ref(db, `users/${currentUser.id}`);
         await remove(userRef);
-        toast({ title: "Success", description: `${currentUser.displayName} has been deleted.`})
-    } catch (e: any) {
+        toast({ title: "Success", description: `${currentUser.displayName} has been deleted from the team.`})
+    } catch (e: any) => {
         toast({ variant: "destructive", title: "Error", description: `Could not delete user: ${e.message}`})
     } finally {
         setIsDeleteDialogOpen(false);
         resetForm();
     }
   }
-
-
-  const handlePageAccessChange = (pageId: string) => {
-    setAccessiblePages(prev => 
-        prev.includes(pageId) ? prev.filter(p => p !== pageId) : [...prev, pageId]
-    );
-  }
-
-  const getPageLabel = (pageId: string) => {
-    return allAdminPages.find(p => p.id === pageId)?.label || pageId;
-  }
-
 
   return (
     <div className="space-y-8">
@@ -194,7 +168,7 @@ export default function TeamManagementPage() {
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
               <DialogDescription>
-                Create an account and assign page permissions. For a super admin, select all pages.
+                Create an account and assign a role. Admins have full access.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -210,20 +184,18 @@ export default function TeamManagementPage() {
                 <Label htmlFor="passwordAdd" className="text-right">Password</Label>
                 <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
               </div>
-              <div className="col-span-4 space-y-2">
-                <Label>Page Access</Label>
-                <div className="grid grid-cols-2 gap-2 rounded-md border p-2">
-                    {allAdminPages.map(page => (
-                        <div key={page.id} className="flex items-center space-x-2">
-                            <Checkbox 
-                                id={`add-${page.id}`}
-                                onCheckedChange={() => handlePageAccessChange(page.id)}
-                                checked={accessiblePages.includes(page.id)}
-                            />
-                            <Label htmlFor={`add-${page.id}`} className="text-sm font-normal">{page.label}</Label>
-                        </div>
-                    ))}
-                </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Role</Label>
+                 <RadioGroup value={role} onValueChange={(value: "Admin" | "Volunteer") => setRole(value)} className="col-span-3 flex gap-4">
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Admin" id="rAddAdmin" />
+                        <Label htmlFor="rAddAdmin">Admin</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Volunteer" id="rAddVolunteer" />
+                        <Label htmlFor="rAddVolunteer">Volunteer</Label>
+                    </div>
+                </RadioGroup>
               </div>
             </div>
             <DialogFooter>
@@ -237,27 +209,25 @@ export default function TeamManagementPage() {
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Edit Team Member</DialogTitle>
-                    <DialogDescription>Update the display name and page permissions for {currentUser?.email}.</DialogDescription>
+                    <DialogDescription>Update the display name and role for {currentUser?.email}.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="displayNameEdit" className="text-right">Display Name</Label>
                         <Input id="displayNameEdit" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="col-span-3" />
                     </div>
-                    <div className="col-span-4 space-y-2">
-                        <Label>Page Access</Label>
-                        <div className="grid grid-cols-2 gap-2 rounded-md border p-2">
-                            {allAdminPages.map(page => (
-                                <div key={page.id} className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id={`edit-${page.id}`} 
-                                        onCheckedChange={() => handlePageAccessChange(page.id)}
-                                        checked={accessiblePages.includes(page.id)}
-                                    />
-                                    <Label htmlFor={`edit-${page.id}`} className="text-sm font-normal">{page.label}</Label>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">Role</Label>
+                        <RadioGroup value={role} onValueChange={(value: "Admin" | "Volunteer") => setRole(value)} className="col-span-3 flex gap-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Admin" id="rEditAdmin" />
+                                <Label htmlFor="rEditAdmin">Admin</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Volunteer" id="rEditVolunteer" />
+                                <Label htmlFor="rEditVolunteer">Volunteer</Label>
+                            </div>
+                        </RadioGroup>
                     </div>
                 </div>
                 <DialogFooter>
@@ -291,7 +261,7 @@ export default function TeamManagementPage() {
             <TableRow>
               <TableHead>Display Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Accessible Pages</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -302,9 +272,7 @@ export default function TeamManagementPage() {
                 <TableCell className="font-medium">{user.displayName}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {user.accessiblePages?.map(pageId => <span key={pageId} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{getPageLabel(pageId)}</span>) || 'None'}
-                  </div>
+                  <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => handleOpenEditDialog(user)}>Edit</Button>
@@ -322,5 +290,3 @@ export default function TeamManagementPage() {
     </div>
   );
 }
-
-    

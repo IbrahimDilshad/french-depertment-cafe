@@ -2,7 +2,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/firebase";
 import {
   Sidebar,
   SidebarHeader,
@@ -11,11 +13,15 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarTrigger,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
+  Megaphone,
+  LogOut,
 } from "lucide-react";
 import Logo from "@/components/logo";
+import { signOut } from "firebase/auth";
 
 const menuItems = [
   {
@@ -23,10 +29,23 @@ const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
   },
+  {
+    href: "/volunteer/announcements",
+    label: "Announcements",
+    icon: Megaphone,
+  }
 ];
 
 export default function VolunteerSidebar() {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.push("/login");
+  };
 
   return (
     <Sidebar>
@@ -53,6 +72,15 @@ export default function VolunteerSidebar() {
         ))}
       </SidebarMenu>
       <SidebarFooter>
+        <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
+              <LogOut />
+              <span>Sign Out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );

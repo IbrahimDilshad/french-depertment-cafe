@@ -28,7 +28,7 @@ import {
 import Logo from "@/components/logo";
 import { signOut } from "firebase/auth";
 
-const allMenuItems = [
+const menuItems = [
   {
     href: "/admin",
     label: "Dashboard",
@@ -70,16 +70,13 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const auth = useAuth();
   const router = useRouter();
-  const { user, loading } = useUser();
+  const { user } = useUser();
 
   const handleSignOut = async () => {
     if (!auth) return;
     await signOut(auth);
     router.push("/login");
   };
-
-  // Show all menu items if the user is logged in
-  const menuItems = user ? allMenuItems : [];
 
   return (
     <Sidebar>
@@ -90,7 +87,7 @@ export default function AdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarMenu className="flex-1">
-        {!loading && user &&
+        {user &&
           menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
