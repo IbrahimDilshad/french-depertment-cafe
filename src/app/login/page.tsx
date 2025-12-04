@@ -44,15 +44,30 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       toast({
         title: "Success",
         description: "Logged in successfully. Redirecting...",
       });
+      
+      const userProfileRef = ref(db, `users/${userCredential.user.uid}`);
+      const snapshot = await get(userProfileRef);
 
-      // Redirect directly to admin page to allow first-time setup
-      router.push("/admin");
+      if (snapshot.exists()) {
+        const userProfile = snapshot.val() as UserProfile;
+        if (userProfile.role === 'Admin') {
+            router.push("/admin");
+        } else if (userProfile.role === 'Volunteer') {
+            router.push("/volunteer");
+        } else {
+            // Default redirect if role is not set or recognized
+            router.push("/login");
+        }
+      } else {
+        // If profile doesn't exist, redirect to admin page for initial setup
+        router.push("/admin");
+      }
 
     } catch (error: any) {
       let errorMessage = error.message;
