@@ -33,21 +33,24 @@ export async function uploadFileToDrive(file) {
         mimeType: file.type,
         body: Readable.from(buffer),
       },
-      fields: 'id' // Only request the file ID
+      // IMPORTANT: This tells the API we are working with a Shared Drive.
+      supportsAllDrives: true,
+      fields: 'id, webViewLink' // Request the webViewLink to display
     });
-
-    if (!uploaded.data.id) {
-        throw new Error("Google Drive upload succeeded but no file ID was returned.");
-    }
 
     const fileId = uploaded.data.id;
 
-    // Make file public
+    if (!fileId) {
+        throw new Error("Google Drive upload succeeded but no file ID was returned.");
+    }
+
+    // Make file public - this is necessary for anyone to view the link.
     await drive.permissions.create({
       fileId: fileId,
+      supportsAllDrives: true, // Also required here
       requestBody: { role: "reader", type: "anyone" },
     });
 
-    // Return the direct view/download link
+    // Return the direct view/download link for embedding/linking
     return `https://drive.google.com/uc?id=${fileId}`;
 }
