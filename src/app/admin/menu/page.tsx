@@ -24,8 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { MenuItem } from "@/lib/types";
-import { useFirestore } from "@/firebase";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { useDatabase } from "@/firebase";
+import { ref, push, set, update } from "firebase/database";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +43,7 @@ const defaultItemState: Partial<MenuItem> = {
 };
 
 export default function MenuManagementPage() {
-  const firestore = useFirestore();
+  const db = useDatabase();
   const { toast } = useToast();
   const { data: menuItems, loading, error } = useCollection<MenuItem>("menuItems");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -69,9 +69,9 @@ export default function MenuManagementPage() {
     }, 150);
   }
 
-  const handleSave = () => {
-    if (!firestore) {
-       toast({ variant: "destructive", title: "Error", description: "Firestore is not properly initialized. Please refresh and try again." });
+  const handleSave = async () => {
+    if (!db) {
+       toast({ variant: "destructive", title: "Error", description: "Realtime Database is not properly initialized. Please refresh and try again." });
        return;
     }
     if (!currentItem || !currentItem.name) {
@@ -79,36 +79,26 @@ export default function MenuManagementPage() {
         return;
     }
 
-    if (isEditMode && currentItem.id) {
-      const { id, ...itemToUpdate } = currentItem;
-      const itemRef = doc(firestore, "menuItems", id);
-      updateDoc(itemRef, itemToUpdate)
-        .then(() => {
-            toast({ title: "Success", description: "Menu item updated." });
-            handleDialogClose();
-        })
-        .catch((e: any) => {
-            console.error("Firestore update error:", e);
-            toast({ 
-                variant: "destructive", 
-                title: "Error updating item", 
-                description: e.message || "An unknown error occurred. Check the console and Firestore rules."
-            });
-        });
-    } else {
-      const { id, ...newItem } = currentItem; // remove id before adding
-      addDoc(collection(firestore, "menuItems"), newItem)
-        .then(() => {
-          toast({ title: "Success", description: "New menu item added." });
-          handleDialogClose();
-        })
-        .catch((e: any) => {
-            console.error("Firestore add error:", e);
-            toast({ 
-                variant: "destructive", 
-                title: "Error adding item", 
-                description: e.message || "An unknown error occurred. Check the console and Firestore rules."
-            });
+    try {
+      if (isEditMode && currentItem.id) {
+        const { id, ...itemToUpdate } = currentItem;
+        const itemRef = ref(db, `menuItems/${id}`);
+        await update(itemRef, itemToUpdate);
+        toast({ title: "Success", description: "Menu item updated." });
+      } else {
+        const { id, ...newItem } = currentItem; // remove id before adding
+        const collectionRef = ref(db, "menuItems");
+        const newItemRef = push(collectionRef); // push() generates a unique key
+        await set(newItemRef, newItem);
+        toast({ title: "Success", description: "New menu item added." });
+      }
+      handleDialogClose();
+    } catch (e: any) {
+        console.error("Database write error:", e);
+        toast({ 
+            variant: "destructive", 
+            title: "Error saving item", 
+            description: e.message || "An unknown error occurred. Check the console and database rules."
         });
     }
   };
@@ -163,7 +153,7 @@ export default function MenuManagementPage() {
                 <Label htmlFor="pre-order-only" className="text-right">Pre-order Only</Label>
                 <Switch 
                     id="pre-order-only"
-                    checked={currentItem.isPreOrderOnly}
+                    checked={!!currentItem.isPreOrderOnly}
                     onCheckedChange={(checked) => setCurrentItem({...currentItem, isPreOrderOnly: checked})}
                  />
               </div>
@@ -187,7 +177,7 @@ export default function MenuManagementPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading menu from Firestore...</TableCell></TableRow>}
+            {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading menu from database...</TableCell></TableRow>}
             {error && <TableRow><TableCell colSpan={6} className="text-center text-destructive">Error: {error.message}</TableCell></TableRow>}
             {!loading && menuItems.map((item) => (
               <TableRow key={item.id}>
@@ -215,7 +205,3 @@ export default function MenuManagementPage() {
       </div>
     </div>
   );
-
-    
-
-    

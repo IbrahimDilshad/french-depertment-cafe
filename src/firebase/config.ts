@@ -3,6 +3,7 @@
 export const firebaseConfig = {
   apiKey: "AIzaSyAbiiBIuPoqxxQhbDw85adBrAUebwGbU64",
   authDomain: "french-depertment-cafe.firebaseapp.com",
+  databaseURL: "https://french-depertment-cafe-default-rtdb.firebaseio.com",
   projectId: "french-depertment-cafe",
   storageBucket: "french-depertment-cafe.appspot.com",
   messagingSenderId: "276279867010",

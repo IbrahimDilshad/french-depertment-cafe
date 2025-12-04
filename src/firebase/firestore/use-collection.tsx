@@ -2,45 +2,41 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  collection,
-  query,
-  onSnapshot,
-  Query,
-  DocumentData,
-  FirestoreError,
-  QuerySnapshot,
-} from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { ref, onValue, DatabaseReference, DataSnapshot } from "firebase/database";
+import { useDatabase } from "@/firebase";
 
 export function useCollection<T>(path: string) {
-  const firestore = useFirestore();
+  const db = useDatabase();
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!firestore) {
-      // Firestore might not be initialized yet, so we wait.
-      // We don't set loading to false here, to avoid a flash of "no data".
+    if (!db) {
       return;
     }
 
     setLoading(true);
-    const collectionQuery: Query<DocumentData> = query(collection(firestore, path));
+    const dbRef: DatabaseReference = ref(db, path);
 
-    const unsubscribe = onSnapshot(
-      collectionQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const documents = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as T[];
-        setData(documents);
+    const unsubscribe = onValue(
+      dbRef,
+      (snapshot: DataSnapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          // Realtime Database returns an object, so we convert it to an array
+          const documents = Object.keys(val).map(key => ({
+            id: key,
+            ...val[key],
+          })) as T[];
+          setData(documents);
+        } else {
+          setData([]);
+        }
         setLoading(false);
         setError(null);
       },
-      (err: FirestoreError) => {
+      (err: Error) => {
         console.error(`Error fetching collection at ${path}:`, err);
         setError(err);
         setLoading(false);
@@ -49,9 +45,7 @@ export function useCollection<T>(path: string) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, path]); // Rerun effect if firestore instance or path changes
+  }, [db, path]);
 
   return { data, loading, error };
 }
-
-    
