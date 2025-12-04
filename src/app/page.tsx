@@ -23,16 +23,17 @@ export default function Home() {
     return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
   };
 
+  // Show only daily items (not pre-order) that are in stock
   const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly && item.availability === 'In Stock');
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
-          Our Menu
+          Daily Menu
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-          Discover our delicious drinks and snacks, prepared with love by our volunteers.
+          Discover our delicious drinks and snacks, available for purchase today.
         </p>
       </div>
 

@@ -94,8 +94,9 @@ export default function PreOrderPage() {
     });
   };
 
+  // Show only items that are pre-order only and in stock
   const availableItems = menuItems.filter(
-    (item) => item.availability === "In Stock"
+    (item) => item.isPreOrderOnly && item.availability === "In Stock"
   );
   
   const cartItems = Object.keys(cart).map(itemId => {
@@ -213,47 +214,53 @@ export default function PreOrderPage() {
           Pre-order Menu
         </h1>
         <p className="text-lg text-muted-foreground">
-          Order ahead for next-day pickup. All in-stock items are available.
+          Order ahead for next-day pickup. Only the items below are available for pre-order.
         </p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         <div className="md:col-span-2 lg:col-span-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableItems.map((item) => {
-              const image = getImage(item.imageId);
-              return (
-                <Card key={item.id} className="flex flex-col">
-                  <CardHeader className="p-0">
-                     <Image
-                        src={image.imageUrl}
-                        alt={item.name}
-                        width={300}
-                        height={200}
-                        className="object-cover w-full h-40 rounded-t-lg"
-                        data-ai-hint={image.imageHint}
-                      />
-                  </CardHeader>
-                  <CardContent className="flex-1 p-4">
-                     <CardTitle className="text-lg font-headline">{item.name}</CardTitle>
-                     <CardDescription className="text-sm mt-1 h-10">{item.description}</CardDescription>
-                  </CardContent>
-                  <CardFooter className="p-4 flex justify-between items-center">
-                    <p className="font-bold text-primary">Rs{item.price.toFixed(0)}</p>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.id)} disabled={!cart[item.id]}>
-                        <MinusCircle className="h-4 w-4" />
-                      </Button>
-                      <span className="w-4 text-center">{cart[item.id] || 0}</span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => addToCart(item.id)}>
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-          </div>
+            {availableItems.length === 0 && !loading ? (
+                <div className="text-center col-span-full py-16">
+                    <p className="text-muted-foreground">There are no items available for pre-order at this time.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {availableItems.map((item) => {
+                    const image = getImage(item.imageId);
+                    return (
+                        <Card key={item.id} className="flex flex-col">
+                        <CardHeader className="p-0">
+                            <Image
+                                src={image.imageUrl}
+                                alt={item.name}
+                                width={300}
+                                height={200}
+                                className="object-cover w-full h-40 rounded-t-lg"
+                                data-ai-hint={image.imageHint}
+                            />
+                        </CardHeader>
+                        <CardContent className="flex-1 p-4">
+                            <CardTitle className="text-lg font-headline">{item.name}</CardTitle>
+                            <CardDescription className="text-sm mt-1 h-10">{item.description}</CardDescription>
+                        </CardContent>
+                        <CardFooter className="p-4 flex justify-between items-center">
+                            <p className="font-bold text-primary">Rs{item.price.toFixed(0)}</p>
+                            <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.id)} disabled={!cart[item.id]}>
+                                <MinusCircle className="h-4 w-4" />
+                            </Button>
+                            <span className="w-4 text-center">{cart[item.id] || 0}</span>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => addToCart(item.id)}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                            </div>
+                        </CardFooter>
+                        </Card>
+                    );
+                    })}
+                </div>
+            )}
         </div>
 
         <div className="md:col-span-1">
