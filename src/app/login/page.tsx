@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useDoc } from "@/firebase";
+import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,23 +66,32 @@ export default function LoginPage() {
           router.push("/volunteer");
         } else {
           // Fallback if role is not set or unexpected value
-          router.push("/login");
-        }
-      } else {
-        // This case might happen if the DB entry wasn't created
-        toast({
+           toast({
             variant: "destructive",
             title: "Login Failed",
-            description: "User profile not found. Please contact an admin.",
+            description: "You do not have a role assigned. Please contact an admin.",
+          });
+          await auth.signOut();
+        }
+      } else {
+        // This case means the user exists in Firebase Auth but has not been added to the team in the database.
+        toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "Your account has not been authorized. Please contact an administrator.",
         });
         await auth.signOut();
       }
 
     } catch (error: any) {
+      let errorMessage = error.message;
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid email or password. Please try again.";
+      }
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message,
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -98,9 +107,9 @@ export default function LoginPage() {
         <Card>
           <form onSubmit={handleLogin}>
             <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardTitle className="text-2xl">Staff Login</CardTitle>
               <CardDescription>
-                Enter your credentials to access the management panel.
+                Enter your credentials to access the system.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -113,6 +122,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -123,6 +133,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
             </CardContent>

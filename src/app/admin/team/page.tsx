@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth, useCollection, useDatabase, useUser } from "@/firebase";
+import { useState } from "react";
+import { useAuth, useCollection, useDatabase } from "@/firebase";
 import { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +45,6 @@ import { Badge } from "@/components/ui/badge";
 export default function TeamManagementPage() {
   const db = useDatabase();
   const auth = useAuth();
-  const { user: authUser } = useUser();
   const { toast } = useToast();
   const { data: users, loading } = useCollection<UserProfile>("users");
 
@@ -83,37 +82,30 @@ export default function TeamManagementPage() {
     }
 
     try {
-      // A special case for the first user (the admin).
-      // If no users exist and the email matches the current logged-in user,
-      // create a DB entry for them instead of a new auth user.
-      if (users.length === 0 && authUser && authUser.email === email) {
-        const newUserProfile: Omit<UserProfile, 'id'> = {
-          displayName: displayName,
-          email: authUser.email!,
-          photoURL: '',
-          role: role,
-        };
-        await set(ref(db, `users/${authUser.uid}`), newUserProfile);
-        toast({ title: "Success", description: "Admin user created successfully." });
-      } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+      // 1. Create the user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        const newUserProfile: Omit<UserProfile, 'id'> = {
-          displayName: displayName,
-          email: user.email!,
-          photoURL: '',
-          role: role,
-        };
-        await set(ref(db, `users/${user.uid}`), newUserProfile);
-        toast({ title: "Success", description: "Team member added successfully." });
-      }
-
-
+      // 2. Create the user profile in Realtime Database with the assigned role
+      const newUserProfile: Omit<UserProfile, 'id'> = {
+        displayName: displayName,
+        email: user.email!,
+        photoURL: '',
+        role: role,
+      };
+      await set(ref(db, `users/${user.uid}`), newUserProfile);
+      
+      toast({ title: "Success", description: "Team member added successfully." });
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Failed to add member", description: error.message });
+      let errorMessage = error.message;
+      if (error.code === 'auth/email-already-in-use') {
+          errorMessage = "This email is already registered. Please use a different email.";
+      } else if (error.code === 'auth/weak-password') {
+          errorMessage = "The password is too weak. It should be at least 6 characters long.";
+      }
+      toast({ variant: "destructive", title: "Failed to add member", description: errorMessage });
     }
   };
 
@@ -156,12 +148,12 @@ export default function TeamManagementPage() {
     if (!db || !currentUser) return;
     try {
         // This is a simplified approach. A full implementation would require a Cloud Function
-        // to delete the auth user record. We are just deleting the database record.
+        // to delete the auth user record. We are just deleting the database record, which revokes access.
         const userRef = ref(db, `users/${currentUser.id}`);
         await remove(userRef);
-        toast({ title: "Success", description: `${currentUser.displayName} has been deleted from the team.`})
+        toast({ title: "Success", description: `${currentUser.displayName} has been removed from the team.`})
     } catch (e: any) {
-        toast({ variant: "destructive", title: "Error", description: `Could not delete user: ${e.message}`})
+        toast({ variant: "destructive", title: "Error", description: `Could not remove user: ${e.message}`})
     } finally {
         setIsDeleteDialogOpen(false);
         resetForm();
@@ -183,7 +175,7 @@ export default function TeamManagementPage() {
             <DialogHeader>
               <DialogTitle>Add New Team Member</DialogTitle>
               <DialogDescription>
-                Create an account and assign a role. Admins have full access.
+                Create a login and assign a role. The new member will use these credentials to sign in.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -197,7 +189,7 @@ export default function TeamManagementPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="passwordAdd" className="text-right">Password</Label>
-                <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" placeholder={users.length === 0 ? "Not required for first user" : ""}/>
+                <Input id="passwordAdd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" placeholder="Min. 6 characters"/>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Role</Label>
@@ -257,14 +249,14 @@ export default function TeamManagementPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will delete <span className="font-semibold">{currentUser?.displayName}</span> from the database.
+                        This will remove <span className="font-semibold">{currentUser?.displayName}</span> from the system, revoking their access.
                         This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setCurrentUser(null)}>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteTeamMember} className="bg-destructive hover:bg-destructive/90">
-                        Yes, delete user
+                        Yes, remove user
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

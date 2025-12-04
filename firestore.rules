@@ -2,25 +2,28 @@
 {
   "rules": {
     "users": {
-      ".read": "auth != null",
+      // Only admins can read the list of users or write to user profiles
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'Admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'Admin'",
       "$uid": {
-         // Admins can write to any profile, users can only write to their own.
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'Admin' || auth.uid == $uid)"
+        // Any authenticated user can read their own profile data.
+        ".read": "auth != null && auth.uid == $uid"
       }
     },
     "menuItems": {
-      // Authenticated users can read, only admins can write
+      // Authenticated users can read menu items.
       ".read": "auth != null",
+      // Only admins can write to menu items.
       ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'Admin'"
     },
     "preOrders": {
-      // Any authenticated user can read for placing/viewing orders
+      // Any authenticated user can read pre-orders (for placing/viewing)
       ".read": "auth != null",
-      // Anyone can create an order, but only admins can update status.
+      // Anyone can create an order, but only admins can update the status later.
       ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() == 'Admin')"
     },
     "sales": {
-      // Any authenticated user can read or write sales data.
+      // Authenticated users can read and write sales data.
       ".read": "auth != null",
       ".write": "auth != null"
     }
