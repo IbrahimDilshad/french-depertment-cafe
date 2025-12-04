@@ -71,13 +71,15 @@ export default function Home() {
             <Card key={item.id} className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-xl">
               <CardHeader className="p-0">
                 <div className="relative w-full h-48">
-                  <Image
-                    src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/600x400/E2E8F0/A0AEC0?text=Image"}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover"
-                  />
+                  {item.imageId && (
+                    <Image
+                      src={`/main/${item.imageId}`}
+                      alt={item.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  )}
                   {item.availability === 'Sold Out' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                       <span className="text-white text-2xl font-bold">Sold Out</span>

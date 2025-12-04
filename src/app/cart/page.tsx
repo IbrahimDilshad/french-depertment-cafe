@@ -56,13 +56,15 @@ export default function CartPage() {
                     {cartItems.map(item => {
                          return (
                             <Card key={item.id} className="flex items-center p-4">
-                                <Image
-                                    src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/100x100/E2E8F0/A0AEC0?text=Image"}
-                                    alt={item.name}
-                                    width={100}
-                                    height={100}
-                                    className="rounded-md object-cover"
-                                />
+                                {item.imageId && (
+                                    <Image
+                                        src={`/main/${item.imageId}`}
+                                        alt={item.name}
+                                        width={100}
+                                        height={100}
+                                        className="rounded-md object-cover"
+                                    />
+                                )}
                                 <div className="ml-4 flex-grow">
                                     <h3 className="font-semibold">{item.name}</h3>
                                     <p className="text-sm text-muted-foreground">Rs{item.price.toFixed(0)}</p>

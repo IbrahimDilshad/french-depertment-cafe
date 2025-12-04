@@ -84,13 +84,15 @@ export default function PreOrderPage() {
               return (
                   <Card key={item.id} className="flex flex-col">
                       <CardHeader className="p-0 relative">
-                          <Image
-                              src={item.imageId ? `/menu/${item.imageId}` : "https://placehold.co/300x200/E2E8F0/A0AEC0?text=Image"}
-                              alt={item.name}
-                              width={300}
-                              height={200}
-                              className="object-cover w-full h-40 rounded-t-lg"
-                          />
+                          {item.imageId && (
+                            <Image
+                                src={`/main/${item.imageId}`}
+                                alt={item.name}
+                                width={300}
+                                height={200}
+                                className="object-cover w-full h-40 rounded-t-lg"
+                            />
+                          )}
                           <Badge variant="secondary" className="absolute top-2 right-2">{item.stock} in stock</Badge>
                       </CardHeader>
                       <CardContent className="flex-1 p-4">
