@@ -11,6 +11,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,11 +31,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { MenuItem } from "@/lib/types";
 import { useDatabase } from "@/firebase";
-import { ref, push, set, update } from "firebase/database";
+import { ref, push, set, update, remove } from "firebase/database";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +59,8 @@ export default function MenuManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<Partial<MenuItem>>(defaultItemState);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
 
   const openNewItemDialog = () => {
     setIsEditMode(false);
@@ -61,6 +73,11 @@ export default function MenuManagementPage() {
     setCurrentItem(item);
     setIsDialogOpen(true);
   };
+
+  const openDeleteDialog = (item: MenuItem) => {
+    setItemToDelete(item);
+    setIsDeleteDialogOpen(true);
+  }
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
@@ -102,6 +119,20 @@ export default function MenuManagementPage() {
         });
     }
   };
+
+  const handleDelete = async () => {
+    if (!db || !itemToDelete) return;
+    try {
+        const itemRef = ref(db, `menuItems/${itemToDelete.id}`);
+        await remove(itemRef);
+        toast({ title: "Success", description: `${itemToDelete.name} has been deleted.`})
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: `Could not delete item: ${e.message}`})
+    } finally {
+        setIsDeleteDialogOpen(false);
+        setItemToDelete(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -163,6 +194,25 @@ export default function MenuManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the item
+                        <span className="font-semibold"> {itemToDelete?.name}</span> from the database.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                        Yes, delete item
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
 
       <div className="border rounded-lg">
         <Table>
@@ -179,7 +229,7 @@ export default function MenuManagementPage() {
           <TableBody>
             {loading && <TableRow><TableCell colSpan={6} className="text-center">Loading menu from database...</TableCell></TableRow>}
             {error && <TableRow><TableCell colSpan={6} className="text-center text-destructive">Error: {error.message}</TableCell></TableRow>}
-            {!loading && menuItems.map((item) => (
+            {menuItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>Rs{item.price.toFixed(0)}</TableCell>
@@ -194,8 +244,12 @@ export default function MenuManagementPage() {
                         {item.isPreOrderOnly ? 'Pre-order' : 'Daily'}
                     </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => openEditItemDialog(item)}>Edit</Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90" onClick={() => openDeleteDialog(item)}>
+                    <Trash2 className="h-4 w-4"/>
+                    <span className="sr-only">Delete</span>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -205,3 +259,5 @@ export default function MenuManagementPage() {
       </div>
     </div>
   );
+}
+
