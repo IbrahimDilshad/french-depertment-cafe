@@ -3,9 +3,10 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getFirestore, addDoc, collection } from "firebase/firestore";
+import { getFirestore, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { initializeFirebase } from "@/firebase";
+import { Sale } from "./types";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -78,35 +79,48 @@ export async function handlePreOrder(prevState: any, formData: FormData) {
 }
 
 export async function generateAnnouncement(prevState: any, formData: FormData) {
-  const topic = formData.get("topic") as string;
-
-  if (!topic || topic.trim() === "") {
+    const topic = formData.get("topic") as string;
+  
+    if (!topic || topic.trim() === "") {
+      return {
+        error: "Please provide a topic for the announcement.",
+      };
+    }
+  
+    const isTeamAnnouncement = formData.get("audience") === "team";
+  
+    // In a real app, this would call a Genkit AI flow
+    await new Promise(resolve => setTimeout(resolve, 100)); 
+  
+    const generatedText = isTeamAnnouncement
+      ? `Team Update:\n\nPlease be aware of the following: ${topic}. Let's work together to ensure a smooth service.`
+      : `Dear students and staff,\n\nWe are excited to announce an update at our café regarding **${topic}**. Come and see what's new!\n\nThank you,\nThe Café Team`;
+  
     return {
-      error: "Please provide a topic for the announcement.",
+      announcement: generatedText,
+      audience: isTeamAnnouncement ? 'team' : 'website'
     };
   }
 
-  // In a real app, this would call the Genkit AI flow
-  await new Promise(resolve => setTimeout(resolve, 1500));
+export async function recordSale(itemId: string, itemName: string, price: number, quantity: number) {
+    const { firestore } = initializeFirebase();
+    
+    const saleData: Omit<Sale, 'id' | 'timestamp'> & { timestamp: any } = {
+        itemId,
+        itemName,
+        quantity,
+        price,
+        volunteerId: 'volunteer-pos', // Placeholder
+        timestamp: serverTimestamp()
+    };
 
-  const generatedText = `Dear students and staff,
-
-We are excited to announce a new update at "Le French Café" regarding **${topic}**. Come check out our new offerings and enjoy a relaxing moment.
-
-Thank you for your continued support!
-
-Best,
-The Le French Café Team`;
-
-  return {
-    announcement: generatedText,
-  };
-}
-
-export async function recordSale(itemId: string, quantity: number) {
-    console.log(`Recorded sale: ${quantity} of item ${itemId}`);
-    // In a real app, you would update Firestore here and decrement stock.
-    revalidatePath("/volunteer");
-    revalidatePath("/");
-    revalidatePath("/admin/analytics");
+    try {
+        await addDoc(collection(firestore, 'sales'), saleData);
+        revalidatePath("/volunteer");
+        revalidatePath("/");
+        revalidatePath("/admin/analytics");
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
 }

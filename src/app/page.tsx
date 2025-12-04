@@ -1,4 +1,6 @@
 
+"use client";
+
 import Image from 'next/image';
 import {
   Card,
@@ -9,10 +11,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { menuItems } from '@/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useCollection } from '@/firebase';
+import { MenuItem } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
+  const { data: menuItems, loading } = useCollection<MenuItem>('menuItems');
+
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
   };
@@ -29,6 +35,20 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {loading && Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="flex flex-col overflow-hidden">
+                <CardHeader className="p-0">
+                    <Skeleton className="w-full h-48" />
+                </CardHeader>
+                <CardContent className="flex-grow p-6">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full" />
+                </CardContent>
+                <CardFooter className="p-6 pt-0">
+                    <Skeleton className="h-6 w-1/4" />
+                </CardFooter>
+            </Card>
+        ))}
         {menuItems.map((item) => {
           const image = getImage(item.imageId);
           return (
