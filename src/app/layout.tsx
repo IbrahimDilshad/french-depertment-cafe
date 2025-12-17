@@ -8,7 +8,7 @@ import Footer from '@/components/footer';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Le French Café',
+  title: 'Le Café Français',
   description: 'Welcome to our school\'s café!',
 };
 
