@@ -20,9 +20,11 @@ import {
   Loader2,
   PlusCircle,
   MinusCircle,
+  Megaphone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 export default function PreOrderPage() {
@@ -62,6 +64,14 @@ export default function PreOrderPage() {
 
   return (
     <div className="container mx-auto py-12 px-4">
+       <Alert className="mb-12 bg-muted/50">
+          <Megaphone className="h-4 w-4" />
+          <AlertTitle className="font-headline">Service Announcement</AlertTitle>
+          <AlertDescription>
+            Pre-order services will be available after the winter break. If you still wish to place a pre-order, you can contact us directly on WhatsApp: <a href="https://wa.me/923706777957" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">03706777957</a>.
+          </AlertDescription>
+        </Alert>
+
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
           Pre-order Menu
