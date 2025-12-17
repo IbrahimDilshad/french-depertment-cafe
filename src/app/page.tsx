@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -10,38 +11,57 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase';
-import { MenuItem, Announcement } from '@/lib/types';
+import { MenuItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Megaphone } from 'lucide-react';
 
 export default function Home() {
   const { data: menuItems, loading: menuLoading } = useCollection<MenuItem>('menuItems');
-  const { data: announcements, loading: announcementsLoading } = useCollection<Announcement>('announcements');
+  const [showPopup, setShowPopup] = useState(false);
 
-  const loading = menuLoading || announcementsLoading;
+  useEffect(() => {
+    // Show the popup after a short delay
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const loading = menuLoading;
   
   // Show only daily items (not pre-order) that are in stock
   const dailyMenuItems = menuItems.filter(item => !item.isPreOrderOnly && item.availability === 'In Stock');
 
-  const latestAnnouncement = announcements.sort((a,b) => b.createdAt - a.createdAt)[0];
-
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
-      
-      {false && latestAnnouncement && (
-         <div className="mb-12 bg-muted/50 p-6 rounded-xl">
-            <div className="flex items-start gap-4">
-                <Megaphone className="h-6 w-6 text-primary mt-1" />
-                <div className="flex-1">
-                    <h3 className="text-xl font-headline font-semibold text-foreground">{latestAnnouncement.title}</h3>
-                    <p className="text-muted-foreground mt-2 whitespace-pre-wrap">{latestAnnouncement.content}</p>
-                </div>
-            </div>
-        </div>
-      )}
 
+      <AlertDialog open={showPopup} onOpenChange={setShowPopup}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>A Gentle Reminder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Welcome to Le Café Français! Please help us maintain a pleasant environment for everyone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="text-center py-4 text-lg font-medium">
+             Keep the place clean.
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowPopup(false)}>Got it!</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-headline text-primary mb-2">
           Daily Menu
