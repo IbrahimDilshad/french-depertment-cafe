@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       
-      {latestAnnouncement && (
+      {false && latestAnnouncement && (
          <div className="mb-12 bg-muted/50 p-6 rounded-xl">
             <div className="flex items-start gap-4">
                 <Megaphone className="h-6 w-6 text-primary mt-1" />
