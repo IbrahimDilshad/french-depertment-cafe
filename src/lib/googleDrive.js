@@ -1,11 +1,11 @@
 
 import { google } from "googleapis";
-import path from "path";
 import { Readable } from "stream";
 
 const getDriveClient = () => {
+  // By not providing a keyFile path, the Google Auth library will automatically
+  // find the credentials from the application's environment.
   const auth = new google.auth.GoogleAuth({
-    keyFile: path.join(process.cwd(), "drive-key.json"),
     scopes: ["https://www.googleapis.com/auth/drive"],
   });
 
