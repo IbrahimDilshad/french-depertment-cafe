@@ -7,9 +7,11 @@ import { useCart } from "@/context/cart-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { MinusCircle, PlusCircle, ShoppingCart, Trash2 } from "lucide-react";
+import { MinusCircle, PlusCircle, ShoppingCart, Trash2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MenuItem } from "@/lib/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 export default function CartPage() {
     const { cartItems, totalCost, removeFromCart, addToCart, updateQuantity } = useCart();
@@ -34,6 +36,14 @@ export default function CartPage() {
             return;
         }
         addToCart(item.id);
+    }
+    
+    const handleProceedToCheckout = () => {
+        toast({
+            title: "Pre-orders Paused",
+            description: "Pre-order services will be available after the winter break.",
+            duration: 5000,
+        });
     }
 
   return (
@@ -105,6 +115,13 @@ export default function CartPage() {
                             <CardTitle>Order Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                           <Alert variant="default" className="bg-muted/50">
+                              <Info className="h-4 w-4" />
+                              <AlertTitle>Pre-orders Paused</AlertTitle>
+                              <AlertDescription>
+                                Service will resume after the winter break.
+                              </AlertDescription>
+                            </Alert>
                             <div className="flex justify-between">
                                 <span>Subtotal</span>
                                 <span>Rs{totalCost.toFixed(0)}</span>
@@ -119,8 +136,8 @@ export default function CartPage() {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full" asChild>
-                                <Link href="/checkout">Proceed to Checkout</Link>
+                            <Button className="w-full" disabled onClick={handleProceedToCheckout}>
+                                Proceed to Checkout
                             </Button>
                         </CardFooter>
                     </Card>
