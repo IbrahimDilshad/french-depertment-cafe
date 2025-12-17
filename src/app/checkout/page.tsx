@@ -30,8 +30,10 @@ import {
 import {
   Loader2,
   Upload,
-  ShoppingCart
+  ShoppingCart,
+  Info
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 function SubmitButton() {
@@ -98,6 +100,14 @@ export default function CheckoutPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+               <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle className="font-headline">Important Notice</AlertTitle>
+                  <AlertDescription>
+                    Please note: All pre-orders placed now will be prepared and available for pickup after the winter break.
+                  </AlertDescription>
+                </Alert>
+
               <div>
                 <h3 className="font-semibold mb-2">Order Summary</h3>
                 <ul className="space-y-1 text-sm text-muted-foreground">
