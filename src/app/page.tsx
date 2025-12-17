@@ -50,11 +50,11 @@ export default function Home() {
           <AlertDialogHeader>
             <AlertDialogTitle>A Gentle Reminder</AlertDialogTitle>
             <AlertDialogDescription>
-              Welcome to Le Café Français! Please help us maintain a pleasant environment for everyone.
+              A friendly reminder about using the water dispenser.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="text-center py-4 text-lg font-medium">
-             Keep the place clean.
+             Get hot water from water dispenser and wait for your turn. Please wait a few minutes for the water to get hot after someone has used it.
           </div>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowPopup(false)}>Got it!</AlertDialogAction>
