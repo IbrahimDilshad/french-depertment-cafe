@@ -1,7 +1,7 @@
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 export const firebaseConfig = {
-  apiKey: "AIzaSyAbiiBIuPoqxxQhbDw85adBrAUebwGbU64",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "french-depertment-cafe.firebaseapp.com",
   databaseURL: "https://french-depertment-cafe-default-rtdb.firebaseio.com",
   projectId: "french-depertment-cafe",
