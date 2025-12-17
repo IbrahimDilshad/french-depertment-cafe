@@ -14,12 +14,6 @@ const teamAnnouncements = [
         date: "3 days ago"
     },
     {
-        id: 2,
-        title: "New Seasonal Drinks Menu Launch",
-        content: "The new seasonal menu is launching next Monday! Please familiarize yourselves with the new recipes. Tasting session at 9 AM on Monday morning.",
-        date: "1 week ago"
-    },
-    {
         id: 3,
         title: "Welcome to our new volunteers!",
         content: "A big welcome to our new volunteers, Ali and Sara! Please make them feel welcome and help them get up to speed.",
